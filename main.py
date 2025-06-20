@@ -4,6 +4,9 @@ import speech_recognition as sr
 from io import BytesIO
 
 from s3Upload import upload_wav_to_s3
+from database import insert
+
+from uuid import uuid4
 
 app = FastAPI()
 
@@ -21,10 +24,13 @@ async def upload_audio(file: UploadFile = File(...)):
         text = recognizer.recognize_google(audio, language="ko-KR")     # 한국어로 인식
 
         # S3 업로드
-        success = await upload_wav_to_s3(file, audio_bytes)
+        uuid = str(uuid4()) + "." + file.content_type.split("/")[-1]
+        file_url  = await upload_wav_to_s3(file, audio_bytes, uuid)
 
-        if not success:
+        if file_url  is None:
             return PlainTextResponse("S3 업로드 실패", status_code=501)
+
+        await insert(file_url, file, uuid, len(audio_bytes))
 
         return PlainTextResponse(text)
     except sr.UnknownValueError:

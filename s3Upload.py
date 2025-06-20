@@ -11,10 +11,11 @@ client_s3 = boto3.client(
     region_name=os.getenv("AWS_REGION")
 )
 
+REGION_NAME = region_name=os.getenv("AWS_REGION")
 BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 
-async def upload_wav_to_s3(file: UploadFile, file_bytes: bytes) -> bool:
-    key = f"image/10/{datetime.now():%Y/%m/%d}/{file.filename}"
+async def upload_wav_to_s3(file: UploadFile, file_bytes: bytes, uuid: str) -> str | None:
+    key = f"image/10/{datetime.now():%Y/%m/%d}/{uuid}"
 
     try:
         # S3에 업로드
@@ -24,7 +25,9 @@ async def upload_wav_to_s3(file: UploadFile, file_bytes: bytes) -> bool:
             Body=file_bytes,
             ContentType=file.content_type
         )
-        return True
+
+        file_url = f"https://{BUCKET_NAME}.s3.{REGION_NAME}.amazonaws.com/{key}"
+        return file_url
     except (BotoCoreError, ClientError) as e:
         print(f"S3 업로드 실패: {e}")
-        return False
+        return None
