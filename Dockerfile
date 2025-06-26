@@ -1,5 +1,5 @@
 # Python 람다 함수를 위한 Dockerfile
-FROM python:3.13.4
+FROM python:3.10.11
 # Poetry 설치
 RUN pip install -U poetry
 # 경로 정의
