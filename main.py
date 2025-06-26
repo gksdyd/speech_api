@@ -1,39 +1,47 @@
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import PlainTextResponse
-import speech_recognition as sr
-from io import BytesIO
+from fastapi.responses import PlainTextResponse, JSONResponse
 
 from s3Upload import upload_wav_to_s3
 from database import insert
-
 from uuid import uuid4
+
+from langTrans import trans_text
+
+from path import save_file
+import os
+
+from pyannote_util import separate_user
 
 app = FastAPI()
 
 @app.post("/speechApi/")
 async def upload_audio(file: UploadFile = File(...)):
     audio_bytes = await file.read()     # 바이트로 읽기
-    audio_file = BytesIO(audio_bytes)   # 메모리에 저장
 
-    recognizer = sr.Recognizer()        # STT 객체 생성
+    tmp_path = save_file(audio_bytes)
+    if tmp_path is None:
+        return PlainTextResponse("파일 저장 실패", status_code=504)
 
-    try:
-        with sr.AudioFile(audio_file) as source:    # 음성 읽기
-            audio = recognizer.record(source)       # 음성 추출
+    # S3 업로드
+    uuid = str(uuid4()) + "." + file.content_type.split("/")[-1]
+    file_url = await upload_wav_to_s3(file, audio_bytes, uuid)
+    if file_url is None:
+        return PlainTextResponse("S3 업로드 실패", status_code=501)
 
-        text = recognizer.recognize_google(audio, language="ko-KR")     # 한국어로 인식
+    db_result = await insert(file_url, file, uuid, len(audio_bytes))
+    if db_result == 1:
+        return PlainTextResponse("DB 저장 실패", status_code=503)
 
-        # S3 업로드
-        uuid = str(uuid4()) + "." + file.content_type.split("/")[-1]
-        file_url  = await upload_wav_to_s3(file, audio_bytes, uuid)
+    separate_text = separate_user(tmp_path)
+    if type(separate_text[0]) == str:
+        if separate_text[1] is None:
+            return PlainTextResponse("음성을 인식할 수 없습니다.", status_code=400)
+        else:
+            return PlainTextResponse(f"Google STT 요청 실패: {separate_text[1]}", status_code=500)
+    os.remove(tmp_path)
 
-        if file_url  is None:
-            return PlainTextResponse("S3 업로드 실패", status_code=501)
+    text_list = await trans_text(separate_text)
+    if len(text_list) == 0:
+        return PlainTextResponse("번역 실패", status_code=502)
 
-        await insert(file_url, file, uuid, len(audio_bytes))
-
-        return PlainTextResponse(text)
-    except sr.UnknownValueError:
-        return PlainTextResponse("음성을 인식할 수 없습니다.", status_code=400)
-    except sr.RequestError as e:
-        return PlainTextResponse(f"Google STT 요청 실패: {e}", status_code=500)
+    return JSONResponse(content=text_list)

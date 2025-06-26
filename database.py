@@ -25,10 +25,9 @@ def get_db():
         db.close()
 
 async def  insert(path: str, file: UploadFile, uuid: str, size: int):
-    now = datetime.now()
-
     db_gen = get_db()
     db: Session = next(db_gen)
+    result = 0
 
     try:
         db_content = Image(
@@ -46,5 +45,9 @@ async def  insert(path: str, file: UploadFile, uuid: str, size: int):
         db.add(db_content)
         db.commit()
         db.refresh(db_content)
+    except Exception as e:
+        print(f"DB 오류: {e}")
+        result = 1
     finally:
         db_gen.close()
+    return result

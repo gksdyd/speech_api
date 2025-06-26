@@ -6,7 +6,7 @@ authors = ["gksdyd <gksdyd009@naver.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.10"
 fastapi = "^0.115.13"
 uvicorn = "^0.34.3"
 python-multipart = "^0.0.20"
@@ -14,7 +14,13 @@ speechrecognition = "^3.14.3"
 boto3 = "^1.38.40"
 sqlalchemy = "^2.0.41"
 pymysql = "^1.1.1"
-
+googletrans = "^4.0.2"
+pyannote-audio = "^3.3.2"
+torch = "^2.7.1"
+torchvision = "^0.22.1"
+torchaudio = "^2.7.1"
+punctuators = "^0.0.7"
+pydub = "^0.25.1"
 
 [build-system]
 requires = ["poetry-core"]
