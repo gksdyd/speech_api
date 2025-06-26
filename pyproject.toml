@@ -21,6 +21,7 @@ torchvision = "^0.22.1"
 torchaudio = "^2.7.1"
 punctuators = "^0.0.7"
 pydub = "^0.25.1"
+pathlib = "^1.0.1"
 
 [build-system]
 requires = ["poetry-core"]

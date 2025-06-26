@@ -3,6 +3,7 @@ import torch
 from pydub import AudioSegment
 from audioLib import audio_extract
 import os
+from pathlib import Path
 
 def separate_user(path: str):
     pipeline = Pipeline.from_pretrained(
@@ -30,13 +31,14 @@ def separate_user(path: str):
                 if end - start > 1:
                     segment = audio[start*1000:end*1000]
                     segment.export(f"speaker{user}.wav", format="wav")
-                    text = audio_extract(os.getcwd() + f"\speaker{user}.wav")
+                    file_path = Path.cwd() / f"speaker{user}.wav"
+                    text = audio_extract(str(file_path))
 
                     if type(text) == list:
                         return text
 
                     result.append([user, text])
-                    os.remove(os.getcwd() + f"\speaker{user}.wav")
+                    file_path.unlink()
                 start = turn.start
                 user = int(speaker[-1])
             end = turn.end
@@ -45,13 +47,14 @@ def separate_user(path: str):
             if end - start > 1:
                 segment = audio[start*1000:end*1000]
                 segment.export(f"speaker{user}.wav", format="wav")
-                text = audio_extract(os.getcwd() + f"\speaker{user}.wav")
+                file_path = Path.cwd() / f"speaker{user}.wav"
+                text = audio_extract(str(file_path))
 
                 if type(text) == list:
                     return text
 
                 result.append([user, text])
-                os.remove(os.getcwd() + f"\speaker{user}.wav")
+                file_path.unlink()
             start = turn.start
             end = turn.end
             user = int(speaker[-1])
