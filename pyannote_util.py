@@ -15,13 +15,33 @@ def separate_user(path: str):
 
     user = 0
     start = 0
+    end = 0
     result = []
     audio = AudioSegment.from_file(path, format="wav")
     tracks = list(diarization.itertracks(yield_label=True))
     for idx, (turn, _, speaker) in enumerate(tracks):
         print(f"start={turn.start:.1f}s stop={turn.end:.1f}s speaker_{speaker}")
-        end = turn.end
-        if (user != int(speaker[-1])) or (len(tracks) - 1 == idx):
+        if idx == 0:
+            start = turn.start
+            end = turn.end
+            user = int(speaker[-1])
+        elif len(tracks) - 1 == idx:
+            if user != int(speaker[-2:]):
+                if end - start > 1:
+                    segment = audio[start*1000:end*1000]
+                    segment.export(f"speaker{user}.wav", format="wav")
+                    text = audio_extract(os.getcwd() + f"\speaker{user}.wav")
+
+                    if type(text) == list:
+                        return text
+
+                    result.append([user, text])
+                    os.remove(os.getcwd() + f"\speaker{user}.wav")
+                start = turn.start
+                user = int(speaker[-1])
+            end = turn.end
+
+        if (user != int(speaker[-2:])) or (len(tracks) - 1 == idx):
             if end - start > 1:
                 segment = audio[start*1000:end*1000]
                 segment.export(f"speaker{user}.wav", format="wav")
@@ -33,6 +53,9 @@ def separate_user(path: str):
                 result.append([user, text])
                 os.remove(os.getcwd() + f"\speaker{user}.wav")
             start = turn.start
+            end = turn.end
             user = int(speaker[-1])
+        else:
+            end = turn.end
 
     return result

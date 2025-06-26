@@ -3,7 +3,6 @@ import speech_recognition as sr
 recognizer = sr.Recognizer()        # STT 객체 생성
 
 def audio_extract(path: str):
-    print("1")
     try:
         with sr.AudioFile(path) as source:  # 음성 읽기
             audio = recognizer.record(source)  # 음성 추출
