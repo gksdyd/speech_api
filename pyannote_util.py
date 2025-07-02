@@ -5,13 +5,14 @@ from audioLib import audio_extract
 import os
 from pathlib import Path
 
+pipeline = Pipeline.from_pretrained(
+    "pyannote/speaker-diarization-3.1",
+    use_auth_token=os.getenv("HUGGING_FACE_KEY")
+)
+
+pipeline.to(torch.device("cpu"))
+
 def separate_user(path: str):
-    pipeline = Pipeline.from_pretrained(
-        "pyannote/speaker-diarization-3.1",
-        use_auth_token=os.getenv("HUGGING_FACE_KEY"))
-
-    pipeline.to(torch.device("cpu"))
-
     diarization = pipeline(path, num_speakers=None)
 
     user = 0
