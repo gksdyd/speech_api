@@ -4,6 +4,9 @@ from pydub import AudioSegment
 from audioLib import audio_extract
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-3.1",

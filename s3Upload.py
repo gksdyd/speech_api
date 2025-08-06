@@ -3,6 +3,9 @@ import os
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 client_s3 = boto3.client(
     's3',

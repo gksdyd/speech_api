@@ -3,9 +3,12 @@ from fastapi import UploadFile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from models import Image
+from dotenv import load_dotenv
 
-MYSQL_MAIN_USERNAME = os.getenv("MYSQL_MAIN_USERNAME_TEST")
-MYSQL_MAIN_PASSWORD = os.getenv("MYSQL_MAIN_PASSWORD_TEST")
+load_dotenv()
+
+MYSQL_MAIN_USERNAME = os.getenv("MYSQL_MAIN_USERNAME")
+MYSQL_MAIN_PASSWORD = os.getenv("MYSQL_MAIN_PASSWORD")
 
 DATABASE_URL = (
     f"mysql+pymysql://{MYSQL_MAIN_USERNAME}:{MYSQL_MAIN_PASSWORD}"
