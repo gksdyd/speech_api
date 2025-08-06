@@ -1,18 +1,17 @@
 import os
+
+from datetime import datetime
 from fastapi import UploadFile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from models import Image
-from dotenv import load_dotenv
+from models import langRecodeUploaded , langRecoding
 
-load_dotenv()
-
-MYSQL_MAIN_USERNAME = os.getenv("MYSQL_MAIN_USERNAME")
-MYSQL_MAIN_PASSWORD = os.getenv("MYSQL_MAIN_PASSWORD")
+MYSQL_MAIN_USERNAME = "kdmin"
+MYSQL_MAIN_PASSWORD = "Kryxtt1!!"
 
 DATABASE_URL = (
     f"mysql+pymysql://{MYSQL_MAIN_USERNAME}:{MYSQL_MAIN_PASSWORD}"
-    "@peter.czsiy02maq2z.ap-northeast-2.rds.amazonaws.com:3306/peterdb"
+    "@kryx-tt.cpyq48w4gz7g.ap-northeast-2.rds.amazonaws.com:33067/grace"
 )
 
 engine = create_engine(DATABASE_URL, echo=True)
@@ -32,7 +31,7 @@ async def  insert(path: str, file: UploadFile, uuid: str, size: int):
     result = 0
 
     try:
-        db_content = Image(
+        db_content = langRecodeUploaded(
             path=path,
             originalName=file.filename,
             uuidName=uuid,
@@ -42,6 +41,42 @@ async def  insert(path: str, file: UploadFile, uuid: str, size: int):
             sort=1,
             type=10,
             delNy=0,
+        )
+
+        db.add(db_content)
+        db.commit()
+        db.refresh(db_content)
+    except Exception as e:
+        print(f"DB 오류: {e}")
+        result = 1
+    finally:
+        db_gen.close()
+    return result
+
+async def  studyUsrInst(lnrdStatusCd: int, lnrdTypeCt: int, lnrdTitle: str , ifmmSeq: str):
+    db_gen = get_db()
+    db: Session = next(db_gen)
+    result = 0
+
+    date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    try:
+        db_content = langRecoding(
+            lnrdStatusCd=lnrdStatusCd,
+            lnrdTypeCt=lnrdTypeCt,
+            lnrdTitle=lnrdTitle,
+            lnrdDelNy=0,
+            regIp="1",
+            regSeq=10,
+            regDeviceCd=0,
+            regDateTime=date,
+            regDateTimeSvr=date,
+            modIp="0",
+            modSeq=0,
+            modDeviceCd=0,
+            modDateTime=date,
+            modDateTimeSvr=date,
+            ifmmSeq=ifmmSeq,
         )
 
         db.add(db_content)

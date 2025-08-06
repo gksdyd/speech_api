@@ -3,8 +3,8 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
-class Image(Base):
-    __tablename__ = 'image'  # MySQL 테이블 이름
+class langRecodeUploaded(Base):
+    __tablename__ = 'langRecodeUploaded'  # MySQL 테이블 이름
 
     seq = Column(Integer, primary_key=True, autoincrement=True)  # PK, AI
     type = Column(Integer)
@@ -19,6 +19,26 @@ class Image(Base):
     pseq = Column(Integer)
     regIp = Column(String(100))
     regSeq = Column(Integer)
-    regDevice = Column(Integer)
+    regDeviceCd = Column(Integer)
     regDateTime = Column(DateTime)
     regDateTimeSvr = Column(DateTime)
+
+class langRecoding(Base):
+    __tablename__ = 'langRecoding'  # MySQL 테이블 이름
+
+    lnrdSeq = Column(Integer, primary_key=True, autoincrement=True)  # PK, AI
+    lnrdStatusCd = Column(Integer)
+    lnrdTypeCt = Column(Integer)
+    lnrdTitle = Column(String(45))
+    lnrdDelNy = Column(SmallInteger)  # tinyint
+    regIp = Column(String(100))
+    regSeq = Column(Integer)
+    regDeviceCd = Column(Integer)
+    regDateTime = Column(DateTime)
+    regDateTimeSvr = Column(DateTime)
+    modIp = Column(String(100))
+    modSeq = Column(Integer)
+    modDeviceCd = Column(Integer)
+    modDateTime = Column(DateTime)
+    modDateTimeSvr = Column(DateTime)
+    ifmmSeq = Column(String)
