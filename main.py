@@ -22,7 +22,7 @@ async def upload_audio( lnrdStatusCd: int = Form(...), lnrdTypeCt: int = Form(..
     if tmp_path is None:
         return PlainTextResponse("파일 저장 실패", status_code=504)
 
-    # S3 업로드
+    ## S3 업로드
     uuid = str(uuid4()) + "." + file.content_type.split("/")[-1]
     file_url = await upload_wav_to_s3(file, audio_bytes, uuid)
     if file_url is None:
