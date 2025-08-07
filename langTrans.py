@@ -10,17 +10,15 @@ async def trans_ko_to_eng(text: str):
     return result.text
   except Exception as e:
     print(f"번역 오류: {e}")
-    return None
+    return -1
 
 model = PunctCapSegModelONNX.from_pretrained("pcs_47lang")
 def add_punctuation(text: str):
   return model.infer([text])[0]
 
 async def trans_text(separate_text):
-  result = []
-  for text in separate_text:
-    temp = await trans_ko_to_eng(text[1])
-    if temp is not None:
-      print("화자" + str(text[0]) + " : " + text[1] + ", " + temp)
-      result.append([text[0], temp])
+  result = await trans_ko_to_eng(separate_text)
+  if result == -1:
+    return -1
+
   return result

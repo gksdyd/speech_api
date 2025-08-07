@@ -26,29 +26,30 @@ async def upload_audio( lnrd_status_cd: int = Form(...), lnrd_type_ct: int = For
         return PlainTextResponse("파일 저장 실패", status_code=504)
 
     ## S3 업로드
-    uuid = str(uuid4()) + "." + file.content_type.split("/")[-1]
-    file_url = await upload_wav_to_s3(file, audio_bytes, uuid)
-    if file_url is None:
-        return PlainTextResponse("S3 업로드 실패", status_code=501)
+    # uuid = str(uuid4()) + "." + file.content_type.split("/")[-1]
+    # file_url = await upload_wav_to_s3(file, audio_bytes, uuid)
+    # if file_url is None:
+    #     return PlainTextResponse("S3 업로드 실패", status_code=501)
+    #
+    # db_result = await insert(file_url, file, uuid, len(audio_bytes))
+    # if db_result == 1:
+    #     return PlainTextResponse("DB 저장 실패", status_code=503)
+    #
+    # study_usr_inst_rt = await study_usr_inst(lnrd_status_cd , lnrd_type_ct , lnrd_title , ifmm_seq)
+    # if study_usr_inst_rt == 1:
+    #     return PlainTextResponse("DB 저장 실패", status_code=503)
+    await separate_user(tmp_path)
+    return None
+    # separate_text = separate_user(tmp_path)
+    # if type(separate_text[0]) == str:
+    #     if separate_text[1] is None:
+    #         return PlainTextResponse("음성을 인식할 수 없습니다.", status_code=400)
+    #     else:
+    #         return PlainTextResponse(f"Google STT 요청 실패: {separate_text[1]}", status_code=500)
+    # os.remove(tmp_path)
 
-    db_result = await insert(file_url, file, uuid, len(audio_bytes))
-    if db_result == 1:
-        return PlainTextResponse("DB 저장 실패", status_code=503)
+    # text_list = await trans_text(separate_text)
+    # if len(text_list) == 0:
+    #     return PlainTextResponse("번역 실패", status_code=502)
 
-    study_usr_inst_rt = await study_usr_inst(lnrd_status_cd , lnrd_type_ct , lnrd_title , ifmm_seq)
-    if study_usr_inst_rt == 1:
-        return PlainTextResponse("DB 저장 실패", status_code=503)
-
-    separate_text = separate_user(tmp_path)
-    if type(separate_text[0]) == str:
-        if separate_text[1] is None:
-            return PlainTextResponse("음성을 인식할 수 없습니다.", status_code=400)
-        else:
-            return PlainTextResponse(f"Google STT 요청 실패: {separate_text[1]}", status_code=500)
-    os.remove(tmp_path)
-
-    text_list = await trans_text(separate_text)
-    if len(text_list) == 0:
-        return PlainTextResponse("번역 실패", status_code=502)
-
-    return JSONResponse(content=text_list)
+    # return JSONResponse(content=text_list)

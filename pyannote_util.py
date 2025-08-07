@@ -1,10 +1,10 @@
 from pyannote.audio import Pipeline
 import torch
 from pydub import AudioSegment
-from audioLib import audio_extract
+from audioLib import audio_extract, preprocess_segment
 import os
-from pathlib import Path
 from dotenv import load_dotenv
+from langTrans import trans_text
 
 load_dotenv()
 
@@ -15,13 +15,9 @@ pipeline = Pipeline.from_pretrained(
 
 pipeline.to(torch.device("cpu"))
 
-def separate_user(path: str):
-    diarization = pipeline(path, num_speakers=None)
+async def separate_user(path: str):
+    diarization = pipeline(path)
 
-    user = 0
-    start = 0
-    end = 0
-    result = []
     audio = AudioSegment.from_file(path, format="wav")
 
     file_size_mb = os.path.getsize(path) / (1024 * 1024)
@@ -32,46 +28,82 @@ def separate_user(path: str):
     seconds = int(duration_ms / 1000 % 60)
 
     print(f"총 녹음 시간: ({minutes}분 {seconds}초)")
-    
+
     tracks = list(diarization.itertracks(yield_label=True))
+    print(str(tracks) + "@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
+    user = 0
+    start = 0
+    end = 0
+    result = []
+
     for idx, (turn, _, speaker) in enumerate(tracks):
-        print(f"start={turn.start:.1f}s stop={turn.end:.1f}s speaker_{speaker}")
-        if idx == 0:
+        # print(f"start={turn.start:.1f}s stop={turn.end:.1f}s speaker_{speaker}")
+        if idx == 0:        # 초기화
             start = turn.start
             end = turn.end
             user = int(speaker[-1])
-        elif len(tracks) - 1 == idx:
-            # if user != int(speaker[-2:]):
-            if end - start > 1:
-                segment = audio[start*1000:end*1000]
-                segment.export(f"speaker{user}.wav", format="wav")
-                file_path = Path.cwd() / f"speaker{user}.wav"
-                text = audio_extract(str(file_path))
+        elif len(tracks) - 1 == idx:    # 마지막 화자 분리 부분 (마지막 화자 분리는 비교할 다음 대상이 없기에 여기서 음성 추출 및 변환을 할지 판단)
+            if user != int(speaker[-2:]):   # 화자가 다를 경우, 음성 추출 및 변환 진행 / 화자가 같을 경우, end 부분 초기화
+                # if end - start > 1:
 
-                if type(text) == list:
-                    return text
+                # 1. 오리지널 오디오에서 해당 구간 자르기
+                segment = AudioSegment.from_file(path, format="wav")[start * 1000:end * 1000]
 
+                # 2. segment 전처리 적용
+                segment = preprocess_segment(segment)
+
+                # 3. 전처리된 segment 저장
+                filename = f"speaker{user}.wav"
+                segment.export(filename, format="wav")
+
+                text = audio_extract(filename)
+                os.remove(filename)
+
+                if text == -1:
+                    print("failed to extract text")
+                    return -1
+                print(text)
+
+                temp = await trans_text(text)
+                if temp == -1:
+                    print("failed to trans text")
+                    return -1
+                print(temp)
                 result.append([user, text])
-                file_path.unlink()
-            start = turn.start
-            user = int(speaker[-1])
+                start = turn.start
+                user = int(speaker[-1])
             end = turn.end
 
-        if (user != int(speaker[-2:])) or (len(tracks) - 1 == idx):
-            segment = audio[start*1000:end*1000]
-            segment.export(f"speaker{user}.wav", format="wav")
-            file_path = Path.cwd() / f"speaker{user}.wav"
-            text = audio_extract(str(file_path))
+        if (user != int(speaker[-2:])) or (len(tracks) - 1 == idx):     # 화자가 다를 경우, 음성 추출 및 변환 진행 / 화자가 같을 경우, end 부분 초기화
+            # if end - start > 1:
 
-            if type(text) == list:
-                return text
+            # 1. 오리지널 오디오에서 해당 구간 자르기
+            segment = AudioSegment.from_file(path, format="wav")[start * 1000:end * 1000]
 
+            # 2. segment 전처리 적용
+            segment = preprocess_segment(segment)
+
+            # 3. 전처리된 segment 저장
+            filename = f"speaker{user}.wav"
+            segment.export(filename, format="wav")
+
+            text = audio_extract(filename)
+            os.remove(filename)
+
+            if text == -1:
+                print("failed to extract text")
+                return -1
+            print(text)
+
+            temp = await trans_text(text)
+            if temp == -1:
+                print("failed to trans text")
+                return -1
+            print(temp)
             result.append([user, text])
-            file_path.unlink()
             start = turn.start
-            end = turn.end
             user = int(speaker[-1])
-        else:
-            end = turn.end
+        end = turn.end
 
     return result
