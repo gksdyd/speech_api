@@ -23,6 +23,16 @@ def separate_user(path: str):
     end = 0
     result = []
     audio = AudioSegment.from_file(path, format="wav")
+
+    file_size_mb = os.path.getsize(path) / (1024 * 1024)
+    print(f"파일 크기: {file_size_mb:.2f} MB")
+
+    duration_ms = len(audio)
+    minutes = int(duration_ms / 1000 // 60)
+    seconds = int(duration_ms / 1000 % 60)
+
+    print(f"총 녹음 시간: ({minutes}분 {seconds}초)")
+    
     tracks = list(diarization.itertracks(yield_label=True))
     for idx, (turn, _, speaker) in enumerate(tracks):
         print(f"start={turn.start:.1f}s stop={turn.end:.1f}s speaker_{speaker}")

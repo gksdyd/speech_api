@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import PlainTextResponse, JSONResponse
 
 from s3Upload import upload_wav_to_s3
-from database import studyUsrInst , insert
+from database import study_usr_inst , insert
 from uuid import uuid4
 
 from langTrans import trans_text
@@ -15,8 +15,11 @@ from pyannote_util import separate_user
 app = FastAPI()
 
 @app.post("/speechApi/")
-async def upload_audio( lnrdStatusCd: int = Form(...), lnrdTypeCt: int = Form(...), lnrdTitle: str = Form(...), ifmmSeq: str = Form(...), file: UploadFile = File(...)):
+async def upload_audio( lnrd_status_cd: int = Form(...), lnrd_type_ct: int = Form(...), lnrd_title: str = Form(...), ifmm_seq: str = Form(...), file: UploadFile = File(...)):
     audio_bytes = await file.read()     # 바이트로 읽기
+
+    audio_size = len(audio_bytes) / (1024 * 1024)
+    print(f"파일 크기: {audio_size:.2f} MB")
 
     tmp_path = save_file(audio_bytes)
     if tmp_path is None:
@@ -32,8 +35,8 @@ async def upload_audio( lnrdStatusCd: int = Form(...), lnrdTypeCt: int = Form(..
     if db_result == 1:
         return PlainTextResponse("DB 저장 실패", status_code=503)
 
-    studyUsrInstRt = await studyUsrInst(lnrdStatusCd , lnrdTypeCt , lnrdTitle , ifmmSeq)
-    if studyUsrInstRt == 1:
+    study_usr_inst_rt = await study_usr_inst(lnrd_status_cd , lnrd_type_ct , lnrd_title , ifmm_seq)
+    if study_usr_inst_rt == 1:
         return PlainTextResponse("DB 저장 실패", status_code=503)
 
     separate_text = separate_user(tmp_path)

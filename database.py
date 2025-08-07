@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import UploadFile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from models import langRecodeUploaded , langRecoding
+from models import LangRecodeUploaded , LangRecoding
 
 MYSQL_MAIN_USERNAME = "kdmin"
 MYSQL_MAIN_PASSWORD = "Kryxtt1!!"
@@ -14,7 +14,12 @@ DATABASE_URL = (
     "@kryx-tt.cpyq48w4gz7g.ap-northeast-2.rds.amazonaws.com:33067/grace"
 )
 
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(
+    DATABASE_URL,
+    echo=True,
+    # pool_pre_ping=True
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # DB 세션 의존성
@@ -31,7 +36,9 @@ async def  insert(path: str, file: UploadFile, uuid: str, size: int):
     result = 0
 
     try:
-        db_content = langRecodeUploaded(
+        # db.execute("SET SESSION max_allowed_packet = 67108864")
+
+        db_content = LangRecodeUploaded(
             path=path,
             originalName=file.filename,
             uuidName=uuid,
@@ -53,7 +60,7 @@ async def  insert(path: str, file: UploadFile, uuid: str, size: int):
         db_gen.close()
     return result
 
-async def  studyUsrInst(lnrdStatusCd: int, lnrdTypeCt: int, lnrdTitle: str , ifmmSeq: str):
+async def  study_usr_inst(lnrd_status_cd: int, lnrd_type_ct: int, lnrd_title: str , ifmm_seq: str):
     db_gen = get_db()
     db: Session = next(db_gen)
     result = 0
@@ -61,10 +68,11 @@ async def  studyUsrInst(lnrdStatusCd: int, lnrdTypeCt: int, lnrdTitle: str , ifm
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     try:
-        db_content = langRecoding(
-            lnrdStatusCd=lnrdStatusCd,
-            lnrdTypeCt=lnrdTypeCt,
-            lnrdTitle=lnrdTitle,
+
+        db_content = LangRecoding(
+            lnrdStatusCd=lnrd_status_cd,
+            lnrdTypeCt=lnrd_type_ct,
+            lnrdTitle=lnrd_title,
             lnrdDelNy=0,
             regIp="1",
             regSeq=10,
@@ -76,7 +84,7 @@ async def  studyUsrInst(lnrdStatusCd: int, lnrdTypeCt: int, lnrdTitle: str , ifm
             modDeviceCd=0,
             modDateTime=date,
             modDateTimeSvr=date,
-            ifmmSeq=ifmmSeq,
+            ifmmSeq=ifmm_seq,
         )
 
         db.add(db_content)

@@ -21,5 +21,6 @@ async def trans_text(separate_text):
   for text in separate_text:
     temp = await trans_ko_to_eng(text[1])
     if temp is not None:
+      print("화자" + str(text[0]) + " : " + text[1] + ", " + temp)
       result.append([text[0], temp])
   return result

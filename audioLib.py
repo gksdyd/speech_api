@@ -7,7 +7,7 @@ def audio_extract(path: str):
         with sr.AudioFile(path) as source:  # 음성 읽기
             audio = recognizer.record(source)  # 음성 추출
         result = recognizer.recognize_google(audio, language="ko-KR")  # 한국어로 인식
-        print(result)
+        # print(result)
         return result
     except sr.UnknownValueError:
         return ["fail", None]
