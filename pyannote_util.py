@@ -41,23 +41,7 @@ def separate_user(path: str):
             end = turn.end
             user = int(speaker[-1])
         elif len(tracks) - 1 == idx:
-            if user != int(speaker[-2:]):
-                if end - start > 1:
-                    segment = audio[start*1000:end*1000]
-                    segment.export(f"speaker{user}.wav", format="wav")
-                    file_path = Path.cwd() / f"speaker{user}.wav"
-                    text = audio_extract(str(file_path))
-
-                    if type(text) == list:
-                        return text
-
-                    result.append([user, text])
-                    file_path.unlink()
-                start = turn.start
-                user = int(speaker[-1])
-            end = turn.end
-
-        if (user != int(speaker[-2:])) or (len(tracks) - 1 == idx):
+            # if user != int(speaker[-2:]):
             if end - start > 1:
                 segment = audio[start*1000:end*1000]
                 segment.export(f"speaker{user}.wav", format="wav")
@@ -69,6 +53,21 @@ def separate_user(path: str):
 
                 result.append([user, text])
                 file_path.unlink()
+            start = turn.start
+            user = int(speaker[-1])
+            end = turn.end
+
+        if (user != int(speaker[-2:])) or (len(tracks) - 1 == idx):
+            segment = audio[start*1000:end*1000]
+            segment.export(f"speaker{user}.wav", format="wav")
+            file_path = Path.cwd() / f"speaker{user}.wav"
+            text = audio_extract(str(file_path))
+
+            if type(text) == list:
+                return text
+
+            result.append([user, text])
+            file_path.unlink()
             start = turn.start
             end = turn.end
             user = int(speaker[-1])
