@@ -53,7 +53,7 @@ class LangScript(Base):
     lnscContentsLang2 = Column(String(2000))
     lnscSpeakerCd = Column(Integer)
     lnscDesc = Column(String(2000))
-    lnrdDelNy = Column(SmallInteger)  # tinyint
+    lnscDelNy = Column(SmallInteger)  # tinyint
     regIp = Column(String(100))
     regSeq = Column(Integer)
     regDeviceCd = Column(Integer)

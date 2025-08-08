@@ -6,8 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from models import LangRecodeUploaded , LangRecoding , LangScript
 
-MYSQL_MAIN_USERNAME = "kdmin"
-MYSQL_MAIN_PASSWORD = "Kryxtt1!!"
+MYSQL_MAIN_USERNAME = os.getenv("MYSQL_MAIN_USERNAME")
+MYSQL_MAIN_PASSWORD = os.getenv("MYSQL_MAIN_PASSWORD")
 
 DATABASE_URL = (
     f"mysql+pymysql://{MYSQL_MAIN_USERNAME}:{MYSQL_MAIN_PASSWORD}"
@@ -55,15 +55,17 @@ async def  insert(path: str, file: UploadFile, uuid: str, size: int):
         db.refresh(db_content)
     except Exception as e:
         print(f"DB 오류: {e}")
-        result = 1
+        result = -1
     finally:
         db_gen.close()
+
     return result
 
 async def  study_usr_inst(lnrd_status_cd: int, lnrd_type_ct: int, lnrd_title: str , ifmm_seq: str):
     db_gen = get_db()
     db: Session = next(db_gen)
     result = 0
+    lnrd_seq = None
 
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -90,17 +92,20 @@ async def  study_usr_inst(lnrd_status_cd: int, lnrd_type_ct: int, lnrd_title: st
         db.add(db_content)
         db.commit()
         db.refresh(db_content)
+        lnrd_seq = db_content.lnrdSeq
     except Exception as e:
         print(f"DB 오류: {e}")
-        result = 1
+        result = -1
     finally:
         db_gen.close()
-    return result
 
-async def  script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd_seq: int):
+    return lnrd_seq if lnrd_seq else result
+
+async def  script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd_seq: str):
     db_gen = get_db()
     db: Session = next(db_gen)
     result = 0
+    lnsc_seq = None
 
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -109,7 +114,7 @@ async def  script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd
             lnscContents=contents,
             lnscContentsEng=eng_contents,
             lnscSpeakerCd=speaker,
-            lnrdDelNy=0,
+            lnscDelNy=0,
             regIp="1",
             regSeq=10,
             regDeviceCd=0,
@@ -126,9 +131,11 @@ async def  script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd
         db.add(db_content)
         db.commit()
         db.refresh(db_content)
+        lnsc_seq = db_content.lnscSeq
     except Exception as e:
         print(f"DB 오류: {e}")
-        result = 1
+        result = -1
     finally:
         db_gen.close()
-    return result
+
+    return lnsc_seq if lnsc_seq else result

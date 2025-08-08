@@ -5,6 +5,7 @@ from audioLib import audio_extract, preprocess_segment
 import os
 from dotenv import load_dotenv
 from langTrans import trans_text
+from database import script_usr_inst
 
 load_dotenv()
 
@@ -15,7 +16,7 @@ pipeline = Pipeline.from_pretrained(
 
 pipeline.to(torch.device("cpu"))
 
-async def separate_user(path: str):
+async def separate_user(path: str, lnrd_seq: str):
     diarization = pipeline(path)
 
     audio = AudioSegment.from_file(path, format="wav")
@@ -70,6 +71,11 @@ async def separate_user(path: str):
                     print("failed to trans text")
                     return -1
                 print(temp)
+
+                await script_usr_inst(text, temp, user, lnrd_seq)
+                # if study_usr_inst_rt == -1:
+                #     return PlainTextResponse("DB 저장 실패", status_code=503)
+
                 result.append([user, text])
                 start = turn.start
                 user = int(speaker[-1])
@@ -101,6 +107,9 @@ async def separate_user(path: str):
                 print("failed to trans text")
                 return -1
             print(temp)
+
+            await script_usr_inst(text, temp, user, lnrd_seq)
+
             result.append([user, text])
             start = turn.start
             user = int(speaker[-1])
