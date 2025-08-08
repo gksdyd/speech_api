@@ -42,3 +42,26 @@ class LangRecoding(Base):
     modDateTime = Column(DateTime)
     modDateTimeSvr = Column(DateTime)
     ifmmSeq = Column(String)
+
+class LangScript(Base):
+    __tablename__ = 'langScript'  # MySQL 테이블 이름
+
+    lnscSeq = Column(Integer, primary_key=True, autoincrement=True)  # PK, AI
+    lnscContents = Column(String(2000))
+    lnscContentsEng = Column(String(2000))
+    lnscContentsLang1 = Column(String(2000))
+    lnscContentsLang2 = Column(String(2000))
+    lnscSpeakerCd = Column(Integer)
+    lnscDesc = Column(String(2000))
+    lnrdDelNy = Column(SmallInteger)  # tinyint
+    regIp = Column(String(100))
+    regSeq = Column(Integer)
+    regDeviceCd = Column(Integer)
+    regDateTime = Column(DateTime)
+    regDateTimeSvr = Column(DateTime)
+    modIp = Column(String(100))
+    modSeq = Column(Integer)
+    modDeviceCd = Column(Integer)
+    modDateTime = Column(DateTime)
+    modDateTimeSvr = Column(DateTime)
+    lnrdSeq = Column(Integer)

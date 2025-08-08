@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import UploadFile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from models import LangRecodeUploaded , LangRecoding
+from models import LangRecodeUploaded , LangRecoding , LangScript
 
 MYSQL_MAIN_USERNAME = "kdmin"
 MYSQL_MAIN_PASSWORD = "Kryxtt1!!"
@@ -85,6 +85,42 @@ async def  study_usr_inst(lnrd_status_cd: int, lnrd_type_ct: int, lnrd_title: st
             modDateTime=date,
             modDateTimeSvr=date,
             ifmmSeq=ifmm_seq,
+        )
+
+        db.add(db_content)
+        db.commit()
+        db.refresh(db_content)
+    except Exception as e:
+        print(f"DB 오류: {e}")
+        result = 1
+    finally:
+        db_gen.close()
+    return result
+
+async def  script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd_seq: int):
+    db_gen = get_db()
+    db: Session = next(db_gen)
+    result = 0
+
+    date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    try:
+        db_content = LangScript(
+            lnscContents=contents,
+            lnscContentsEng=eng_contents,
+            lnscSpeakerCd=speaker,
+            lnrdDelNy=0,
+            regIp="1",
+            regSeq=10,
+            regDeviceCd=0,
+            regDateTime=date,
+            regDateTimeSvr=date,
+            modIp="0",
+            modSeq=0,
+            modDeviceCd=0,
+            modDateTime=date,
+            modDateTimeSvr=date,
+            lnrdSeq=lnrd_seq,
         )
 
         db.add(db_content)
