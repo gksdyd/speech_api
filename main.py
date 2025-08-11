@@ -1,8 +1,8 @@
 from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.responses import PlainTextResponse, JSONResponse
+from fastapi.responses import PlainTextResponse
 
 from s3Upload import upload_wav_to_s3
-from database import study_usr_inst , insert
+from database import save_db_process
 from uuid import uuid4
 
 from path import save_file
@@ -29,17 +29,8 @@ async def upload_audio( lnrd_status_cd: int = Form(...), lnrd_type_ct: int = For
     if file_url is None:
         return PlainTextResponse("S3 업로드 실패", status_code=501)
 
-    db_result = await insert(file_url, file, uuid, len(audio_bytes))
-    if db_result == -1:
-        return PlainTextResponse("DB 저장 실패", status_code=503)
-
-    study_usr_inst_rt = await study_usr_inst(lnrd_status_cd , lnrd_type_ct , lnrd_title , ifmm_seq)
-    if study_usr_inst_rt == -1:
-        return PlainTextResponse("DB 저장 실패", status_code=503)
-
-    await separate_user(tmp_path, study_usr_inst_rt)
+    result_seperate = await separate_user(tmp_path)
     os.remove(tmp_path)
 
+    save_db_process(file_url, file, uuid, len(audio_bytes), lnrd_status_cd , lnrd_type_ct , lnrd_title , ifmm_seq, result_seperate)
     return None
-
-    # return JSONResponse(content=text_list)
