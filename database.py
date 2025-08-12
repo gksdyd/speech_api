@@ -99,6 +99,10 @@ def script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd_seq: s
     return db_content.lnscSeq
 
 def save_db_process(path: str, file: UploadFile, uuid: str, size: int, lnrd_status_cd: int, lnrd_type_ct: int, lnrd_title: str , ifmm_seq: str, result_seperate: list):
+    if len(result_seperate) == 0:
+        print(f"음성 추출 실패!!")
+        return
+
     db_gen = get_db()
     db: Session = next(db_gen)
 
