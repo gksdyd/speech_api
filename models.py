@@ -30,6 +30,7 @@ class LangRecoding(Base):
     lnrdStatusCd = Column(Integer)
     lnrdTypeCt = Column(Integer)
     lnrdTitle = Column(String(45))
+    lnrdRunTime = Column(Integer)
     lnrdDelNy = Column(SmallInteger)  # tinyint
     regIp = Column(String(100))
     regSeq = Column(Integer)

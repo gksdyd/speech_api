@@ -5,7 +5,6 @@ from audioLib import audio_extract, preprocess_segment
 import os
 from dotenv import load_dotenv
 from langTrans import trans_text
-from debug import output_file_size, output_audio_len
 
 load_dotenv()
 
@@ -56,9 +55,6 @@ async def separate_user(path: str):
         result_contents.append(lnsc_contents)
         result_contents.append(lnsc_contents_eng)
         result_seperate.append(result_contents)
-
-    output_file_size(path)
-    output_audio_len(path)
 
     print(str(tracks) + "@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 

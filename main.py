@@ -10,18 +10,20 @@ import os
 
 from pyannote_util import separate_user
 
+from debug import *
+
 app = FastAPI()
 
 @app.post("/speechApi/")
 async def upload_audio( lnrd_status_cd: int = Form(...), lnrd_type_ct: int = Form(...), lnrd_title: str = Form(...), ifmm_seq: str = Form(...), file: UploadFile = File(...)):
     audio_bytes = await file.read()     # 바이트로 읽기
 
-    audio_size = len(audio_bytes) / (1024 * 1024)
-    print(f"파일 크기: {audio_size:.2f} MB")
-
     tmp_path = save_file(audio_bytes)
     if tmp_path is None:
         return PlainTextResponse("파일 저장 실패", status_code=504)
+
+    lnrd_run_time = output_audio_len(tmp_path)
+    size = output_file_size(tmp_path)
 
     # S3 업로드
     uuid = str(uuid4()) + "." + file.content_type.split("/")[-1]
@@ -32,5 +34,5 @@ async def upload_audio( lnrd_status_cd: int = Form(...), lnrd_type_ct: int = For
     result_seperate = await separate_user(tmp_path)
     os.remove(tmp_path)
 
-    save_db_process(file_url, file, uuid, len(audio_bytes), lnrd_status_cd , lnrd_type_ct , lnrd_title , ifmm_seq, result_seperate)
+    save_db_process(file_url, file, uuid, size, lnrd_status_cd , lnrd_type_ct , lnrd_title , ifmm_seq, result_seperate, lnrd_run_time)
     return None
