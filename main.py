@@ -25,6 +25,10 @@ async def upload_audio( lnrd_status_cd: int = Form(...), lnrd_type_ct: int = For
     lnrd_run_time = output_audio_len(tmp_path)
     size = output_file_size(tmp_path)
 
+    if lnrd_run_time >= 300:
+        print(f"파일 길이 제한: {lnrd_run_time}")
+        return None
+
     # S3 업로드
     uuid = str(uuid4()) + "." + file.content_type.split("/")[-1]
     file_url = await upload_wav_to_s3(file, audio_bytes, uuid)
