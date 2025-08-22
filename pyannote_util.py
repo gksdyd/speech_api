@@ -16,7 +16,7 @@ pipeline = Pipeline.from_pretrained(
 pipeline.to(torch.device("cpu"))
 
 async def separate_user(path: str):
-    diarization = pipeline(path)
+    diarization = pipeline(path, max_speakers=5)
 
     tracks = list(diarization.itertracks(yield_label=True))
 
@@ -27,7 +27,7 @@ async def separate_user(path: str):
 
         start = turn.start
         end = turn.end
-        lnsc_speaker_cd = int(speaker[-1])
+        lnsc_speaker_cd = int(speaker[-1]) + 1009
 
         # 1. 오리지널 오디오에서 해당 구간 자르기
         segment = AudioSegment.from_file(path, format="wav")[start * 1000:end * 1000]
