@@ -44,7 +44,6 @@ async def separate_user(path: str):
 
         if lnsc_contents == -1:
             print("failed to extract text")
-            continue
 
         lnsc_contents_eng = await trans_text(lnsc_contents)
         if lnsc_contents_eng == -1:
@@ -57,6 +56,10 @@ async def separate_user(path: str):
         result_seperate.append(result_contents)
 
     print(str(tracks) + "@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
+    if len(result_seperate) == 0:
+        print(f"음성 추출 실패!!")
+        return -1
 
     for contents in result_seperate:
         print(f"{contents[0]} : {contents[1]} / {contents[2]}")

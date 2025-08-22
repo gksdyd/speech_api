@@ -53,12 +53,12 @@ def insert(path: str, file: UploadFile, uuid: str, size: int, lnrd_seq:str, ifmm
 
     db.add(db_content)
 
-def study_usr_inst(lnrd_status_cd: int, lnrd_type_ct: int, lnrd_title: str , ifmm_seq: str, lnrd_run_time: int, db: Session):
+def study_usr_inst(lnrd_status_cd: int, lnrd_type_cd: int, lnrd_title: str , ifmm_seq: str, lnrd_run_time: int, db: Session):
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     db_content = LangRecoding(
         lnrdStatusCd=lnrd_status_cd,
-        lnrdTypeCt=lnrd_type_ct,
+        lnrdTypeCd=lnrd_type_cd,
         lnrdTitle=lnrd_title,
         lnrdRunTime=lnrd_run_time,
         lnrdDelNy=0,
@@ -80,7 +80,23 @@ def study_usr_inst(lnrd_status_cd: int, lnrd_type_ct: int, lnrd_title: str , ifm
 
     return db_content.lnrdSeq
 
-def script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd_seq: str, ifmm_seq, db: Session):
+def study_usr_updt(lnrd_status_cd: int, lnrdSeq: str, ifmm_seq: str, db: Session):
+    date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    record = db.query(LangRecoding).filter(LangRecoding.lnrdSeq == lnrdSeq).first()
+    if not record:
+        raise ValueError(f"Record with id {lnrdSeq} not found")
+
+    record.lnrdStatusCd = lnrd_status_cd
+    record.modIp = "0"
+    record.modSeq = ifmm_seq
+    record.modDeviceCd = 0
+    record.modDateTime = date
+    record.modDateTimeSvr = date
+
+    return record
+
+def script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd_seq: str, ifmm_seq: str, db: Session):
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     db_content = LangScript(
@@ -106,16 +122,12 @@ def script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd_seq: s
 
     return db_content.lnscSeq
 
-def save_db_process(path: str, file: UploadFile, uuid: str, size: int, lnrd_status_cd: int, lnrd_type_ct: int, lnrd_title: str , ifmm_seq: str, result_seperate: list, lnrd_run_time: int):
-    if len(result_seperate) == 0:
-        print(f"음성 추출 실패!!")
-        return
-
+def save_db_process(path: str, file: UploadFile, uuid: str, size: int, ifmm_seq: str, result_seperate: list, foreign_key: str):
     db_gen = get_db()
     db: Session = next(db_gen)
 
     try:
-        foreign_key = study_usr_inst(lnrd_status_cd, lnrd_type_ct, lnrd_title, ifmm_seq, lnrd_run_time, db)
+        study_usr_updt(1002, foreign_key, ifmm_seq, db)
         insert(path, file, uuid, size, foreign_key, ifmm_seq, db)
         for contents in result_seperate:
             script_usr_inst(contents[1], contents[2], contents[0], foreign_key, ifmm_seq, db)
@@ -124,4 +136,32 @@ def save_db_process(path: str, file: UploadFile, uuid: str, size: int, lnrd_stat
         db.rollback()
         print(f"DB 오류: {e}")
     finally:
-        db_gen.close()
+        db.close()
+
+def insert_db_lnrd_recoding(lnrd_status_cd: int, lnrd_type_cd: int, lnrd_title: str , ifmm_seq: str, lnrd_run_time: int):
+    db_gen = get_db()
+    db: Session = next(db_gen)
+
+    try:
+        foreign_key = study_usr_inst(lnrd_status_cd, lnrd_type_cd, lnrd_title, ifmm_seq, lnrd_run_time, db)
+        db.commit()
+        return foreign_key
+    except Exception as e:
+        db.rollback()
+        print(f"DB 오류: {e}")
+    finally:
+        db.close()
+
+def update_db_lnrd_recoding_for_empty_contents(ifmm_seq: str, foreign_key: str):
+    db_gen = get_db()
+    db: Session = next(db_gen)
+
+    try:
+        study_usr_updt(1003, foreign_key, ifmm_seq, db)
+        db.commit()
+        return foreign_key
+    except Exception as e:
+        db.rollback()
+        print(f"DB 오류: {e}")
+    finally:
+        db.close()
