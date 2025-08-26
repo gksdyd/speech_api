@@ -23,8 +23,8 @@ class LangRecodeUploaded(Base):
     regDateTime = Column(DateTime)
     regDateTimeSvr = Column(DateTime)
 
-class LangRecoding(Base):
-    __tablename__ = 'langRecording'  # MySQL 테이블 이름
+class LangRecord(Base):
+    __tablename__ = 'langRecord'  # MySQL 테이블 이름
 
     lnrdSeq = Column(Integer, primary_key=True, autoincrement=True)  # PK, AI
     lnrdStatusCd = Column(Integer)

@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import UploadFile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from models import LangRecodeUploaded , LangRecoding , LangScript
+from models import LangRecodeUploaded , LangRecord , LangScript
 
 MYSQL_MAIN_USERNAME = os.getenv("MYSQL_MAIN_USERNAME")
 MYSQL_MAIN_PASSWORD = os.getenv("MYSQL_MAIN_PASSWORD")
@@ -56,7 +56,7 @@ def insert(path: str, file: UploadFile, uuid: str, size: int, lnrd_seq:str, ifmm
 def study_usr_inst(lnrd_status_cd: int, lnrd_type_cd: int, lnrd_title: str , ifmm_seq: str, lnrd_run_time: int, db: Session):
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    db_content = LangRecoding(
+    db_content = LangRecord(
         lnrdStatusCd=lnrd_status_cd,
         lnrdTypeCd=lnrd_type_cd,
         lnrdTitle=lnrd_title,
@@ -83,7 +83,7 @@ def study_usr_inst(lnrd_status_cd: int, lnrd_type_cd: int, lnrd_title: str , ifm
 def study_usr_updt(lnrd_status_cd: int, lnrdSeq: str, ifmm_seq: str, db: Session):
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    record = db.query(LangRecoding).filter(LangRecoding.lnrdSeq == lnrdSeq).first()
+    record = db.query(LangRecord).filter(LangRecord.lnrdSeq == lnrdSeq).first()
     if not record:
         raise ValueError(f"Record with id {lnrdSeq} not found")
 
