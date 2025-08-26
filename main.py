@@ -27,7 +27,7 @@ async def upload_audio( lnrd_status_cd: int = Form(...), lnrd_type_cd: int = For
     foreign_key = insert_db_lnrd_recoding(lnrd_status_cd, lnrd_type_cd, lnrd_title, ifmm_seq, lnrd_run_time)
 
     # S3 업로드
-    uuid = str(uuid4()) + "." + file.content_type.split("/")[-1]
+    uuid = str(uuid4()) + "." + file.filename.split(".")[-1]
     file_url = await upload_wav_to_s3(file, audio_bytes, uuid)
     if file_url is None:
         print("S3 업로드 실패")
