@@ -9,9 +9,11 @@ import numpy as np
 from pyannote.core import Segment
 from sklearn.metrics.pairwise import cosine_distances
 from sklearn.cluster import AgglomerativeClustering
-from typing import List, Tuple
+from typing import List
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
+from voice_gender_classifier import ECAPA_gender
+from pronunciation_evaluation import evaluate_pronunciation_and_intonation
 
 load_dotenv()
 
@@ -22,6 +24,9 @@ pipeline = Pipeline.from_pretrained(
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 pipeline.to(device)
+
+model = ECAPA_gender.from_pretrained("JaesungHuh/voice-gender-classifier")
+model.to(device).eval()
 
 pipeline.segmentation.onset = 0.60        # 발화 시작 민감도 낮춤
 pipeline.segmentation.offset = 0.62       # 발화 종료 민감도 낮춤
@@ -145,19 +150,30 @@ async def separate_user(path: str):
         filename = f"speaker{lnsc_speaker_cd}.wav"
         segment.export(filename, format="wav")
 
+        with torch.no_grad():
+            gender = model.predict(filename, device=device)
+            if gender == "male":
+                gender_cd = 36
+            else:
+                gender_cd = 37
+
         lnsc_contents = audio_extract(filename)
-        os.remove(filename)
 
         if lnsc_contents == -1:
             print("failed to extract text")
+            os.remove(filename)
             continue
+        else :
+            res = evaluate_pronunciation_and_intonation(filename, lnsc_contents)
+            print(res)
+            os.remove(filename)
 
         lnsc_contents_eng = await trans_text(lnsc_contents)
         if lnsc_contents_eng == -1:
             print("failed to trans text")
             continue
 
-        result_seperate.append([lnsc_speaker_cd, lnsc_contents, lnsc_contents_eng])
+        result_seperate.append([lnsc_speaker_cd, lnsc_contents, lnsc_contents_eng, gender_cd])
 
     print(tracks)
 
@@ -166,7 +182,7 @@ async def separate_user(path: str):
         return -1
 
     for contents in result_seperate:
-        print(f"{contents[0]} : {contents[1]} / {contents[2]}")
+        print(f"{contents[0]} : {contents[1]} / {contents[2]} / {gender}")
 
     return result_seperate
 

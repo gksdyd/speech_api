@@ -96,10 +96,11 @@ def study_usr_updt(lnrd_status_cd: int, lnrdSeq: str, ifmm_seq: str, db: Session
 
     return record
 
-def script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd_seq: str, ifmm_seq: str, db: Session):
+def script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd_seq: str, ifmm_seq: str, speakerGender, db: Session):
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     db_content = LangScript(
+        lnscSpeakerGenderCd=speakerGender,
         lnscContents=contents,
         lnscContentsEng=eng_contents,
         lnscSpeakerCd=speaker,
@@ -130,7 +131,7 @@ def save_db_process(path: str, file: UploadFile, uuid: str, size: int, ifmm_seq:
         study_usr_updt(1002, foreign_key, ifmm_seq, db)
         insert(path, file, uuid, size, foreign_key, ifmm_seq, db)
         for contents in result_seperate:
-            script_usr_inst(contents[1], contents[2], contents[0], foreign_key, ifmm_seq, db)
+            script_usr_inst(contents[1], contents[2], contents[0], foreign_key, ifmm_seq, contents[3], db)
         db.commit()
     except Exception as e:
         db.rollback()
