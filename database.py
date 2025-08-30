@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import UploadFile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from models import LangRecodeUploaded , LangRecord , LangScript
+from models import *
 
 MYSQL_MAIN_USERNAME = os.getenv("MYSQL_MAIN_USERNAME")
 MYSQL_MAIN_PASSWORD = os.getenv("MYSQL_MAIN_PASSWORD")
@@ -31,7 +31,7 @@ def get_db():
     finally:
         db.close()
 
-def insert(path: str, file: UploadFile, uuid: str, size: int, lnrd_seq:str, ifmm_seq, db: Session):
+def insert(path: str, file: UploadFile, uuid: str, size: int, lnrd_seq:str, type: int, ifmm_seq, db: Session):
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     db_content = LangRecodeUploaded(
@@ -42,7 +42,7 @@ def insert(path: str, file: UploadFile, uuid: str, size: int, lnrd_seq:str, ifmm
         size=size,
         pseq=lnrd_seq,
         sort=1,
-        type=10,
+        type=type,
         delNy=0,
         regIp="1",
         regSeq=ifmm_seq,
@@ -123,13 +123,39 @@ def script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd_seq: s
 
     return db_content.lnscSeq
 
+def study_result_inst(contents: str, score: float, lnst_seq: str, lnsc_seq: str, ifmm_seq: str, db: Session):
+    date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    db_content = LangStudyResult(
+        lnsrContents=contents,
+        lnsrScore=score,
+        lnsrDelNy=0,
+        regIp="1",
+        regSeq=ifmm_seq,
+        regDeviceCd=0,
+        regDateTime=date,
+        regDateTimeSvr=date,
+        modIp="0",
+        modSeq=ifmm_seq,
+        modDeviceCd=0,
+        modDateTime=date,
+        modDateTimeSvr=date,
+        lnstSeq=lnst_seq,
+        lnscSeq=lnsc_seq,
+    )
+
+    db.add(db_content)
+    db.flush()
+
+    return db_content.lnscSeq
+
 def save_db_process(path: str, file: UploadFile, uuid: str, size: int, ifmm_seq: str, result_seperate: list, foreign_key: str):
     db_gen = get_db()
     db: Session = next(db_gen)
 
     try:
         study_usr_updt(1002, foreign_key, ifmm_seq, db)
-        insert(path, file, uuid, size, foreign_key, ifmm_seq, db)
+        insert(path, file, uuid, size, foreign_key, 10, ifmm_seq, db)
         for contents in result_seperate:
             script_usr_inst(contents[1], contents[2], contents[0], foreign_key, ifmm_seq, contents[3], db)
         db.commit()
@@ -161,6 +187,20 @@ def update_db_lnrd_recoding_for_empty_contents(ifmm_seq: str, foreign_key: str):
         study_usr_updt(1003, foreign_key, ifmm_seq, db)
         db.commit()
         return foreign_key
+    except Exception as e:
+        db.rollback()
+        print(f"DB 오류: {e}")
+    finally:
+        db.close()
+
+def insert_db_study_result(path: str, file: UploadFile, uuid: str, size: int, contents: str, score: float, lnst_seq: str, lnsc_seq: str, ifmm_seq: str):
+    db_gen = get_db()
+    db: Session = next(db_gen)
+
+    try:
+        foreign_key = study_result_inst(contents, score, lnst_seq, lnsc_seq, ifmm_seq, db)
+        insert(path, file, uuid, size, foreign_key, 20, ifmm_seq, db)
+        db.commit()
     except Exception as e:
         db.rollback()
         print(f"DB 오류: {e}")

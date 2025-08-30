@@ -13,7 +13,6 @@ from typing import List
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 from voice_gender_classifier import ECAPA_gender
-from pronunciation_evaluation import evaluate_pronunciation_and_intonation
 
 load_dotenv()
 
@@ -157,16 +156,13 @@ async def separate_user(path: str):
             else:
                 gender_cd = 37
 
-        lnsc_contents = audio_extract(filename)
+        lnsc_contents = audio_extract(filename, "ko-KR")
+
+        os.remove(filename)
 
         if lnsc_contents == -1:
             print("failed to extract text")
-            os.remove(filename)
             continue
-        else :
-            res = evaluate_pronunciation_and_intonation(filename, lnsc_contents)
-            print(res)
-            os.remove(filename)
 
         lnsc_contents_eng = await trans_text(lnsc_contents)
         if lnsc_contents_eng == -1:
@@ -185,6 +181,13 @@ async def separate_user(path: str):
         print(f"{contents[0]} : {contents[1]} / {contents[2]} / {gender}")
 
     return result_seperate
+
+def pronunciation_evaluation_user(path: str):
+    # 0) 전처리된 파일 생성
+    path = clean_wav(path, use_denoise=True)
+
+    lnsc_contents_eng = audio_extract(path, "en-US")
+    return lnsc_contents_eng
 
 def embed_segment(E, seg: Segment, pad: float = 0.10, min_frames: int = 3):
     """

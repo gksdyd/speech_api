@@ -8,7 +8,7 @@ from scipy.signal import butter, filtfilt, resample_poly
 
 recognizer = sr.Recognizer()        # STT 객체 생성
 
-def audio_extract(path: str):
+def audio_extract(path: str, language: str):
     # sound = AudioSegment.from_file(path)
     # print("길이 (초):", len(sound) / 1000)
     # print("평균 음량 (dBFS):", sound.dBFS)
@@ -17,7 +17,7 @@ def audio_extract(path: str):
         with sr.AudioFile(path) as source:  # 음성 읽기
             audio = recognizer.record(source)  # 음성 추출
 
-        result = recognizer.recognize_google(audio, language="ko-KR")  # 한국어로 인식
+        result = recognizer.recognize_google(audio, language=language)
         return result
     except sr.UnknownValueError:
         print("Google Speech Recognition could not understand audio")

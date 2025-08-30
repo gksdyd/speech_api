@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, SmallInteger
+from sqlalchemy import Column, Integer, String, DateTime, SmallInteger, Double
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -67,3 +67,24 @@ class LangScript(Base):
     modDateTime = Column(DateTime)
     modDateTimeSvr = Column(DateTime)
     lnrdSeq = Column(Integer)
+
+class LangStudyResult(Base):
+    __tablename__ = 'langStudyResult'  # MySQL 테이블 이름
+
+    lnsrSeq = Column(Integer, primary_key=True, autoincrement=True)  # PK, AI
+    lnsrContents = Column(String(2000))
+    lnsrScore = Column(Double)
+    lnsrDesc = Column(String(2000))
+    lnsrDelNy = Column(SmallInteger)    # tinyint
+    regIp = Column(String(100))
+    regSeq = Column(Integer)
+    regDeviceCd = Column(Integer)
+    regDateTime = Column(DateTime)
+    regDateTimeSvr = Column(DateTime)
+    modIp = Column(String(100))
+    modSeq = Column(Integer)
+    modDeviceCd = Column(Integer)
+    modDateTime = Column(DateTime)
+    modDateTimeSvr = Column(DateTime)
+    lnstSeq = Column(Integer)
+    lnscSeq = Column(Integer)
