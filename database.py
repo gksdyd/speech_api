@@ -31,7 +31,7 @@ def get_db():
     finally:
         db.close()
 
-def insert(path: str, file: UploadFile, uuid: str, size: int, lnrd_seq:str, type: int, ifmm_seq, db: Session):
+def insert(path: str, file: UploadFile, uuid: str, size: int, lnrd_seq:str, type: int, ifmm_seq: str, sort: int, db: Session):
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     db_content = LangRecodeUploaded(
@@ -41,7 +41,7 @@ def insert(path: str, file: UploadFile, uuid: str, size: int, lnrd_seq:str, type
         ext=uuid.split(".")[-1],
         size=size,
         pseq=lnrd_seq,
-        sort=1,
+        sort=sort,
         type=type,
         delNy=0,
         regIp="1",
@@ -155,7 +155,7 @@ def save_db_process(path: str, file: UploadFile, uuid: str, size: int, ifmm_seq:
 
     try:
         study_usr_updt(1002, foreign_key, ifmm_seq, db)
-        insert(path, file, uuid, size, foreign_key, 10, ifmm_seq, db)
+        insert(path, file, uuid, size, foreign_key, 10, ifmm_seq, 1, db)
         for contents in result_seperate:
             script_usr_inst(contents[1], contents[2], contents[0], foreign_key, ifmm_seq, contents[3], db)
         db.commit()
@@ -193,13 +193,13 @@ def update_db_lnrd_recoding_for_empty_contents(ifmm_seq: str, foreign_key: str):
     finally:
         db.close()
 
-def insert_db_study_result(path: str, file: UploadFile, uuid: str, size: int, contents: str, score: float, lnst_seq: str, lnsc_seq: str, ifmm_seq: str):
+def insert_db_study_result(path: str, file: UploadFile, uuid: str, size: int, contents: str, score: float, lnst_seq: str, lnsc_seq: str, ifmm_seq: str, sort: int):
     db_gen = get_db()
     db: Session = next(db_gen)
 
     try:
         foreign_key = study_result_inst(contents, score, lnst_seq, lnsc_seq, ifmm_seq, db)
-        insert(path, file, uuid, size, foreign_key, 20, ifmm_seq, db)
+        insert(path, file, uuid, size, foreign_key, 20, ifmm_seq, sort, db)
         db.commit()
     except Exception as e:
         db.rollback()

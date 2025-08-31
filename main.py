@@ -51,7 +51,7 @@ async def upload_audio( lnrd_status_cd: int = Form(...), lnrd_type_cd: int = For
 
 
 @app.post("/pronunciationEvaluationApi/")
-async def pronunciation_evaluation( lnsc_contents_eng: str = Form(...), ifmm_seq: str = Form(...), lnst_seq: str = Form(...), lnsc_seq: str = Form(...), file: UploadFile = File(...)):
+async def pronunciation_evaluation( lnsc_contents_eng: str = Form(...), ifmm_seq: str = Form(...), lnst_seq: str = Form(...), lnsc_seq: str = Form(...), sort: int = Form(...), file: UploadFile = File(...)):
     import time
 
     audio_bytes = await file.read()  # 바이트로 읽기
@@ -78,6 +78,6 @@ async def pronunciation_evaluation( lnsc_contents_eng: str = Form(...), ifmm_seq
     print(time.strftime("%H:%M:%S"))
     result = evaluate_pronunciation_and_intonation(tmp_path, contents, lnsc_contents_eng)
     score = result.get("assessment", {}).get("pronscore_0_100")
-    insert_db_study_result(file_url, file, uuid, size, contents, score, lnst_seq, lnsc_seq, ifmm_seq)
-    # print(result)
+    insert_db_study_result(file_url, file, uuid, size, contents, score, lnst_seq, lnsc_seq, ifmm_seq, sort)
+    print(result)
     return score

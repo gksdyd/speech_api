@@ -4,7 +4,7 @@ from pydub import AudioSegment
 from audioLib import audio_extract, preprocess_segment, clean_wav
 import os
 from dotenv import load_dotenv
-from langTrans import trans_text
+from langTrans import trans_text, add_punctuation
 import numpy as np
 from pyannote.core import Segment
 from sklearn.metrics.pairwise import cosine_distances
@@ -187,7 +187,9 @@ def pronunciation_evaluation_user(path: str):
     path = clean_wav(path, use_denoise=True)
 
     lnsc_contents_eng = audio_extract(path, "en-US")
-    return lnsc_contents_eng
+    sentences = add_punctuation(lnsc_contents_eng)
+    full_text = " ".join(sentences)
+    return full_text
 
 def embed_segment(E, seg: Segment, pad: float = 0.10, min_frames: int = 3):
     """

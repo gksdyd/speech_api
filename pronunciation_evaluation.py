@@ -93,11 +93,19 @@ def voice_stability(wav_path: str):
 # ---------- (accuracy/completeness) ----------
 def acc_comp_scores(reference_text: str, recognized_text: str):
     out = jiwer.process_words(reference_text or "", recognized_text or "")
-    # WER → Accuracy
-    accuracy = round(100 * (1 - out.wer), 1)
-    # ref 단어 수 = hits + substitutions + deletions
-    ref_count = max(1, out.hits + out.substitutions + out.deletions)
-    completeness = round(100 * (1 - out.deletions / ref_count), 1)
+    N = out.hits + out.substitutions + out.deletions  # ref 단어 수
+
+    # 특수 케이스 처리
+    hyp_has_text = bool((recognized_text or "").strip())
+    if N == 0:
+        # 참조와 가설 모두 비었으면 완전 일치로 간주
+        if not hyp_has_text:
+            return 100.0, 100.0
+        # 참조는 없는데 말한 건 있음 → 정확/완전성 0으로
+        return 0.0, 0.0
+
+    accuracy = round(100 * (out.hits / N), 1)
+    completeness = round(100 * (1 - (out.deletions / N)), 1)
     return accuracy, completeness
 
 # ---------- 메인: 발음/토네이션 평가 ----------
