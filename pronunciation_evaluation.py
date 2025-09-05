@@ -256,3 +256,23 @@ def evaluate_pronunciation_and_intonation(wav_path: str, recognized_text: str, r
             "pronscore_0_100": pronscore
         }
     }
+
+def text_pronunciation(recognized_text: str, reference_text: str):
+    accuracy, completeness = acc_comp_scores(reference_text, recognized_text)
+
+    # (3) Azure 스타일 종합 PronScore (옵션)
+    parts = []
+    parts.append(accuracy)
+    parts.append(completeness)
+
+    s = sorted(parts)
+    pronscore = round((0.6 * s[0] + 0.4 * s[1]), 1)
+
+    return {
+        "recognized_text": recognized_text,
+        "assessment": {
+            "accuracy_0_100": accuracy,            # ← 추가
+            "completeness_0_100": completeness,    # (참조문장 있을 때만)
+            "pronscore_0_100": pronscore
+        }
+    }

@@ -199,7 +199,9 @@ def insert_db_study_result(path: str, file: UploadFile, uuid: str, size: int, co
 
     try:
         foreign_key = study_result_inst(contents, score, lnst_seq, lnsc_seq, ifmm_seq, db)
-        insert(path, file, uuid, size, foreign_key, 20, ifmm_seq, sort, db)
+
+        if path is not None:
+            insert(path, file, uuid, size, foreign_key, 20, ifmm_seq, sort, db)
         db.commit()
     except Exception as e:
         db.rollback()
