@@ -147,7 +147,7 @@ def study_result_inst(contents: str, score: float, lnst_seq: str, lnsc_seq: str,
     db.add(db_content)
     db.flush()
 
-    return db_content.lnscSeq
+    return db_content.lnsrSeq
 
 def save_db_process(path: str, file: UploadFile, uuid: str, size: int, ifmm_seq: str, result_seperate: list, foreign_key: str):
     db_gen = get_db()
