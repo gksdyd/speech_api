@@ -92,6 +92,8 @@ def voice_stability(wav_path: str):
 
 # ---------- (accuracy/completeness) ----------
 def acc_comp_scores(reference_text: str, recognized_text: str):
+    reference_text = reference_text.lower()
+    recognized_text = recognized_text.lower()
     out = jiwer.process_words(reference_text or "", recognized_text or "")
     N = out.hits + out.substitutions + out.deletions  # ref 단어 수
 
@@ -270,6 +272,7 @@ def text_pronunciation(recognized_text: str, reference_text: str):
 
     return {
         "recognized_text": recognized_text,
+        "reference_text": reference_text,
         "assessment": {
             "accuracy_0_100": accuracy,            # ← 추가
             "completeness_0_100": completeness,    # (참조문장 있을 때만)
