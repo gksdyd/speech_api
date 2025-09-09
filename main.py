@@ -89,7 +89,7 @@ async def pronunciation_evaluation(
     else:
         result = text_pronunciation(lnsr_contents, lnsc_contents_eng)
 
-    score = result.get("assessment", {}).get("pronscore_0_100")
+    score = round(result.get("assessment", {}).get("pronscore_0_100"))
     insert_db_study_result(file_url, file, uuid, size, lnsr_contents, score, lnst_seq, lnsc_seq, ifmm_seq, sort)
     print(result)
     return score
