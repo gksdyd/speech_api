@@ -187,6 +187,9 @@ def pronunciation_evaluation_user(path: str):
     path = clean_wav(path, use_denoise=True)
 
     lnsc_contents_eng = audio_extract(path, "en-US")
+    if lnsc_contents_eng == -1:
+        print("failed to extract text")
+        return ""
     sentences = add_punctuation(lnsc_contents_eng)
     full_text = " ".join(sentences)
     return full_text
