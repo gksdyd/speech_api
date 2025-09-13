@@ -12,7 +12,13 @@ async def trans_ko_to_eng(text: str):
     print(f"번역 오류: {e}")
     return -1
 
-model = PunctCapSegModelONNX.from_pretrained("pcs_47lang")
+# import onnxruntime as ort
+# print("available:", ort.get_available_providers())
+
+model = PunctCapSegModelONNX.from_pretrained(
+    "pcs_47lang",
+    ort_providers=["CPUExecutionProvider"]   # ★ 문자열이 아니라 리스트
+)
 def add_punctuation(text: str):
   return model.infer([text])[0]
 
