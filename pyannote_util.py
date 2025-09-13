@@ -32,7 +32,7 @@ pipeline.segmentation.offset = 0.62       # 발화 종료 민감도 낮춤
 pipeline.segmentation.min_duration_on = 0.25   # 최소 발화 길이(초)
 pipeline.segmentation.min_duration_off = 0.18  # 발화 사이 최소 간격
 
-async def separate_user(path: str):
+async def separate_user(path: str, debug: bool = False):
     # 0) 전처리된 파일 생성
     path = clean_wav(path, use_denoise=True)
 
@@ -43,7 +43,8 @@ async def separate_user(path: str):
     segments_all = [turn for (turn, _, _) in tracks]
 
     if len(segments_all) == 0:
-        print(f"데이터 존재하지 않음")
+        if debug:
+            print(f"데이터 존재하지 않음")
         return -1
 
     # 2) 겹침 정리(전부 버리지 말고 겹침만 제거)
@@ -130,11 +131,12 @@ async def separate_user(path: str):
     labels = to_zero_based(raw_labels)
 
     # 5) 통계 로깅
-    print(f"chosen_threshold={chosen_th}, K={len(set(labels))}, silhouette(cos)={sil:.3f}")
-    if n >= 2:
-        print(f"min={tri.min():.3f} p25={p25:.3f} p50={p50:.3f} p85={p85:.3f} max={tri.max():.3f}")
-        np.set_printoptions(precision=6, suppress=False)
-        print("D sample (first 5x5):\n", D[:5, :5])
+    if debug:
+        print(f"chosen_threshold={chosen_th}, K={len(set(labels))}, silhouette(cos)={sil:.3f}")
+        if n >= 2:
+            print(f"min={tri.min():.3f} p25={p25:.3f} p50={p50:.3f} p85={p85:.3f} max={tri.max():.3f}")
+            np.set_printoptions(precision=6, suppress=False)
+            print("D sample (first 5x5):\n", D[:5, :5])
 
     # 6) 오디오 로드 1회(메모리) + 안전 슬라이스
     base = AudioSegment.from_file(path, format="wav")
@@ -156,37 +158,46 @@ async def separate_user(path: str):
             else:
                 gender_cd = 37
 
-        lnsc_contents = audio_extract(filename, "ko-KR")
+        lnsc_contents = audio_extract(filename, "ko-KR", debug)
 
         os.remove(filename)
 
         if lnsc_contents == -1:
-            print("failed to extract text")
+            if debug:
+                print("failed to extract text")
             continue
 
-        lnsc_contents_eng = await trans_text(lnsc_contents)
+        lnsc_contents_eng = await trans_text(lnsc_contents, debug)
         if lnsc_contents_eng == -1:
-            print("failed to trans text")
+            if debug:
+                print("failed to trans text")
             continue
 
         result_seperate.append([lnsc_speaker_cd, lnsc_contents, lnsc_contents_eng, gender_cd])
 
-    print(tracks)
+    if debug:
+        print(tracks)
 
     if len(result_seperate) == 0:
-        print(f"음성 추출 실패!!")
+        if debug:
+            print(f"음성 추출 실패!!")
         return -1
 
-    for contents in result_seperate:
-        print(f"{contents[0]} : {contents[1]} / {contents[2]} / {gender}")
+    if debug:
+        for contents in result_seperate:
+            print(f"{contents[0]} : {contents[1]} / {contents[2]} / {gender}")
 
     return result_seperate
 
-def pronunciation_evaluation_user(path: str):
+def pronunciation_evaluation_user(path: str, debug: bool = False):
     # 0) 전처리된 파일 생성
     path = clean_wav(path, use_denoise=True)
 
-    lnsc_contents_eng = audio_extract(path, "en-US")
+    lnsc_contents_eng = audio_extract(path, "en-US", debug)
+    if lnsc_contents_eng == -1:
+        if debug:
+            print("failed to extract text")
+        return ""
     sentences = add_punctuation(lnsc_contents_eng)
     full_text = " ".join(sentences)
     return full_text

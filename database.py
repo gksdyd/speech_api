@@ -96,11 +96,11 @@ def study_usr_updt(lnrd_status_cd: int, lnrdSeq: str, ifmm_seq: str, db: Session
 
     return record
 
-def script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd_seq: str, ifmm_seq: str, speakerGender, db: Session):
+def script_usr_inst(contents: str, eng_contents: str, speaker: int , lnrd_seq: str, ifmm_seq: str, speaker_gender: int, db: Session):
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     db_content = LangScript(
-        lnscSpeakerGenderCd=speakerGender,
+        lnscSpeakerGenderCd=speaker_gender,
         lnscContents=contents,
         lnscContentsEng=eng_contents,
         lnscSpeakerCd=speaker,
@@ -147,9 +147,9 @@ def study_result_inst(contents: str, score: float, lnst_seq: str, lnsc_seq: str,
     db.add(db_content)
     db.flush()
 
-    return db_content.lnscSeq
+    return db_content.lnsrSeq
 
-def save_db_process(path: str, file: UploadFile, uuid: str, size: int, ifmm_seq: str, result_seperate: list, foreign_key: str):
+def save_db_process(path: str, file: UploadFile, uuid: str, size: int, ifmm_seq: str, result_seperate: list, foreign_key: str, debug: bool):
     db_gen = get_db()
     db: Session = next(db_gen)
 
@@ -161,11 +161,12 @@ def save_db_process(path: str, file: UploadFile, uuid: str, size: int, ifmm_seq:
         db.commit()
     except Exception as e:
         db.rollback()
-        print(f"DB 오류: {e}")
+        if debug:
+            print(f"DB 오류: {e}")
     finally:
         db.close()
 
-def insert_db_lnrd_recoding(lnrd_status_cd: int, lnrd_type_cd: int, lnrd_title: str , ifmm_seq: str, lnrd_run_time: int):
+def insert_db_lnrd_recoding(lnrd_status_cd: int, lnrd_type_cd: int, lnrd_title: str , ifmm_seq: str, lnrd_run_time: int, debug: bool):
     db_gen = get_db()
     db: Session = next(db_gen)
 
@@ -175,11 +176,12 @@ def insert_db_lnrd_recoding(lnrd_status_cd: int, lnrd_type_cd: int, lnrd_title: 
         return foreign_key
     except Exception as e:
         db.rollback()
-        print(f"DB 오류: {e}")
+        if debug:
+            print(f"DB 오류: {e}")
     finally:
         db.close()
 
-def update_db_lnrd_recoding_for_empty_contents(ifmm_seq: str, foreign_key: str):
+def update_db_lnrd_recoding_for_empty_contents(ifmm_seq: str, foreign_key: str, debug: bool):
     db_gen = get_db()
     db: Session = next(db_gen)
 
@@ -189,20 +191,24 @@ def update_db_lnrd_recoding_for_empty_contents(ifmm_seq: str, foreign_key: str):
         return foreign_key
     except Exception as e:
         db.rollback()
-        print(f"DB 오류: {e}")
+        if debug:
+            print(f"DB 오류: {e}")
     finally:
         db.close()
 
-def insert_db_study_result(path: str, file: UploadFile, uuid: str, size: int, contents: str, score: float, lnst_seq: str, lnsc_seq: str, ifmm_seq: str, sort: int):
+def insert_db_study_result(path: str, file: UploadFile, uuid: str, size: int, contents: str, score: float, lnst_seq: str, lnsc_seq: str, ifmm_seq: str, sort: int, debug: bool):
     db_gen = get_db()
     db: Session = next(db_gen)
 
     try:
         foreign_key = study_result_inst(contents, score, lnst_seq, lnsc_seq, ifmm_seq, db)
-        insert(path, file, uuid, size, foreign_key, 20, ifmm_seq, sort, db)
+
+        if path is not None:
+            insert(path, file, uuid, size, foreign_key, 20, ifmm_seq, sort, db)
         db.commit()
     except Exception as e:
         db.rollback()
-        print(f"DB 오류: {e}")
+        if debug:
+            print(f"DB 오류: {e}")
     finally:
         db.close()

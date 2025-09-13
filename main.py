@@ -10,74 +10,96 @@ from pyannote_util import separate_user, pronunciation_evaluation_user
 
 from debug import *
 
-from pronunciation_evaluation import evaluate_pronunciation_and_intonation
+from pronunciation_evaluation import evaluate_pronunciation_and_intonation, text_pronunciation
 
 app = FastAPI()
 
+debug_mode = False
+
 @app.post("/speechApi/")
-async def upload_audio( lnrd_status_cd: int = Form(...), lnrd_type_cd: int = Form(...), lnrd_title: str = Form(...), ifmm_seq: str = Form(...), file: UploadFile = File(...)):
+async def upload_audio(
+        lnrd_status_cd: int = Form(...), lnrd_type_cd: int = Form(...), lnrd_title: str = Form(...),
+        ifmm_seq: str = Form(...), file: UploadFile = File(...)):
     audio_bytes = await file.read()     # 바이트로 읽기
 
-    tmp_path = save_file(audio_bytes)
+    tmp_path = save_file(audio_bytes, debug_mode)
     if tmp_path is None:
-        print("파일 저장 실패")
+        if debug_mode:
+            print("파일 저장 실패")
         return -1
 
-    lnrd_run_time = output_audio_len(tmp_path)
-    size = output_file_size(tmp_path)
+    lnrd_run_time = output_audio_len(tmp_path, debug_mode)
+    size = output_file_size(tmp_path, debug_mode)
 
-    foreign_key = insert_db_lnrd_recoding(lnrd_status_cd, lnrd_type_cd, lnrd_title, ifmm_seq, lnrd_run_time)
+    foreign_key = insert_db_lnrd_recoding(lnrd_status_cd, lnrd_type_cd, lnrd_title, ifmm_seq, lnrd_run_time, debug_mode)
 
     # S3 업로드
     uuid = str(uuid4()) + "." + file.filename.split(".")[-1]
-    file_url = await upload_wav_to_s3(file, audio_bytes, uuid)
+    file_url = await upload_wav_to_s3(file, audio_bytes, uuid, debug_mode)
     if file_url is None:
-        print("S3 업로드 실패")
+        if debug_mode:
+            print("S3 업로드 실패")
         os.remove(tmp_path)
         return -1
 
-    result_seperate = await separate_user(tmp_path)
+    result_seperate = await separate_user(tmp_path, debug_mode)
     if result_seperate == -1:
-        update_db_lnrd_recoding_for_empty_contents(ifmm_seq, foreign_key)
-        print("No Contents")
+        update_db_lnrd_recoding_for_empty_contents(ifmm_seq, foreign_key, debug_mode)
+        if debug_mode:
+            print("No Contents")
         os.remove(tmp_path)
         return -1
 
     os.remove(tmp_path)
 
-    save_db_process(file_url, file, uuid, size, ifmm_seq, result_seperate, foreign_key)
-    print("Success")
+    save_db_process(file_url, file, uuid, size, ifmm_seq, result_seperate, foreign_key, debug_mode)
+    if debug_mode:
+        print("Success")
     return 0
 
 
 @app.post("/pronunciationEvaluationApi/")
-async def pronunciation_evaluation( lnsc_contents_eng: str = Form(...), ifmm_seq: str = Form(...), lnst_seq: str = Form(...), lnsc_seq: str = Form(...), sort: int = Form(...), file: UploadFile = File(...)):
-    import time
+async def pronunciation_evaluation(
+        lnsc_contents_eng: str = Form(...), ifmm_seq: str = Form(...), lnst_seq: str = Form(...),
+        lnsc_seq: str = Form(...), lnsr_contents: str | None = File(None), sort: int | None = File(None),
+        file: UploadFile | None = File(None)):
+    file_url = None
+    uuid = None
+    size = None
 
-    audio_bytes = await file.read()  # 바이트로 읽기
+    if file is not None:
+        audio_bytes = await file.read()  # 바이트로 읽기
 
-    tmp_path = save_file(audio_bytes)
-    if tmp_path is None:
-        print("파일 저장 실패")
-        return -1
+        tmp_path = save_file(audio_bytes, debug_mode)
+        if tmp_path is None:
+            if debug_mode:
+                print("파일 저장 실패")
+            return -1
 
-    size = output_file_size(tmp_path)
-    # S3 업로드
-    uuid = str(uuid4()) + "." + file.filename.split(".")[-1]
-    file_url = await upload_wav_to_s3(file, audio_bytes, uuid)
-    if file_url is None:
-        print("S3 업로드 실패")
-        os.remove(tmp_path)
-        return -1
-    print(time.strftime("%H:%M:%S"))
-    contents = pronunciation_evaluation_user(tmp_path)
-    if contents == -1:
-        print("No Contents")
-        os.remove(tmp_path)
-        return -1
-    print(time.strftime("%H:%M:%S"))
-    result = evaluate_pronunciation_and_intonation(tmp_path, contents, lnsc_contents_eng)
-    score = result.get("assessment", {}).get("pronscore_0_100")
-    insert_db_study_result(file_url, file, uuid, size, contents, score, lnst_seq, lnsc_seq, ifmm_seq, sort)
-    print(result)
+        size = output_file_size(tmp_path, debug_mode)
+        # S3 업로드
+        uuid = str(uuid4()) + "." + file.filename.split(".")[-1]
+        file_url = await upload_wav_to_s3(file, audio_bytes, uuid, debug_mode)
+        if file_url is None:
+            if debug_mode:
+                print("S3 업로드 실패")
+            os.remove(tmp_path)
+            return -1
+
+        lnsr_contents = pronunciation_evaluation_user(tmp_path, debug_mode)
+        if lnsr_contents == -1:
+            if debug_mode:
+                print("No Contents")
+            os.remove(tmp_path)
+            return -1
+
+        result = evaluate_pronunciation_and_intonation(tmp_path, lnsr_contents, lnsc_contents_eng)
+
+    else:
+        result = text_pronunciation(lnsr_contents, lnsc_contents_eng)
+
+    score = round(result.get("assessment", {}).get("pronscore_0_100"))
+    insert_db_study_result(file_url, file, uuid, size, lnsr_contents, score, lnst_seq, lnsc_seq, ifmm_seq, sort, debug_mode)
+    if debug_mode:
+        print(result)
     return score

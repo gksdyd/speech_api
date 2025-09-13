@@ -28,14 +28,5 @@ COPY --from=builder /usr/local/lib/python3.10 /usr/local/lib/python3.10
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /build /app
 
-# 환경 변수 설정
-ENV MYSQL_MAIN_USERNAME=${MYSQL_MAIN_USERNAME} \
-    MYSQL_MAIN_PASSWORD=${MYSQL_MAIN_PASSWORD} \
-    CREDENTIALS_ACCESS_KEY=${CREDENTIALS_ACCESS_KEY} \
-    CREDENTIALS_SECRET_KEY=${CREDENTIALS_SECRET_KEY} \
-    AWS_REGION=${AWS_REGION} \
-    S3_BUCKET_NAME=${S3_BUCKET_NAME} \
-    HUGGING_FACE_KEY=${HUGGING_FACE_KEY}
-
 # 애플리케이션 실행
 CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
