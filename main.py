@@ -16,7 +16,7 @@ app = FastAPI()
 
 debug_mode = False
 
-@app.post("/speechApi/")
+@app.post("/speechApi")
 async def upload_audio(
         lnrd_status_cd: int = Form(...), lnrd_type_cd: int = Form(...), lnrd_title: str = Form(...),
         ifmm_seq: str = Form(...), file: UploadFile = File(...)):
@@ -58,7 +58,7 @@ async def upload_audio(
     return 0
 
 
-@app.post("/pronunciationEvaluationApi/")
+@app.post("/pronunciationEvaluationApi")
 async def pronunciation_evaluation(
         lnsc_contents_eng: str = Form(...), ifmm_seq: str = Form(...), lnst_seq: str = Form(...),
         lnsc_seq: str = Form(...), lnsr_contents: str | None = File(None), sort: int | None = File(None),
