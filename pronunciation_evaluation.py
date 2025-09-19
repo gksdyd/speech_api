@@ -220,10 +220,11 @@ def evaluate_pronunciation_and_intonation(wav_path: str, recognized_text: str, r
     parts.append(round(intonation_score, 1))
     parts.append(fluency)
     parts.append(accuracy)
-    parts.append(completeness)
+    # parts.append(completeness)
 
     s = sorted(parts)
-    pronscore = round((0.4 * s[0] + 0.2 * s[1] + 0.2 * s[2] + 0.2 * s[3]), 1)
+    # pronscore = round((0.4 * s[0] + 0.2 * s[1] + 0.2 * s[2] + 0.2 * s[3]), 1)
+    pronscore = round((0.5 * s[0] + 0.25 * s[1] + 0.25 * s[2]), 1)
 
     return {
         "duration_sec": round(dur, 2),
@@ -265,10 +266,11 @@ def text_pronunciation(recognized_text: str, reference_text: str):
     # (3) Azure 스타일 종합 PronScore (옵션)
     parts = []
     parts.append(accuracy)
-    parts.append(completeness)
+    # parts.append(completeness)
 
     s = sorted(parts)
-    pronscore = round((0.6 * s[0] + 0.4 * s[1]), 1)
+    # pronscore = round((0.6 * s[0] + 0.4 * s[1]), 1)
+    pronscore = round((s[0]), 1)
 
     return {
         "recognized_text": recognized_text,
