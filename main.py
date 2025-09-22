@@ -20,6 +20,8 @@ debug_mode = False
 async def upload_audio(
         lnrd_status_cd: int = Form(...), lnrd_type_cd: int = Form(...), lnrd_title: str = Form(...),
         ifmm_seq: str = Form(...), file: UploadFile = File(...)):
+    foreign_key = insert_db_lnrd_recoding(lnrd_status_cd, lnrd_type_cd, lnrd_title, ifmm_seq, debug_mode)
+
     audio_bytes = await file.read()     # 바이트로 읽기
 
     tmp_path = save_file(audio_bytes, debug_mode)
@@ -30,8 +32,6 @@ async def upload_audio(
 
     lnrd_run_time = output_audio_len(tmp_path, debug_mode)
     size = output_file_size(tmp_path, debug_mode)
-
-    foreign_key = insert_db_lnrd_recoding(lnrd_status_cd, lnrd_type_cd, lnrd_title, ifmm_seq, lnrd_run_time, debug_mode)
 
     # S3 업로드
     uuid = str(uuid4()) + "." + file.filename.split(".")[-1]
@@ -52,7 +52,7 @@ async def upload_audio(
 
     os.remove(tmp_path)
 
-    save_db_process(file_url, file, uuid, size, ifmm_seq, result_seperate, foreign_key, debug_mode)
+    save_db_process(file_url, file, uuid, size, ifmm_seq, result_seperate, foreign_key, lnrd_run_time, debug_mode)
     if debug_mode:
         print("Success")
     return 0

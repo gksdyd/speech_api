@@ -53,14 +53,14 @@ def insert(path: str, file: UploadFile, uuid: str, size: int, lnrd_seq:str, type
 
     db.add(db_content)
 
-def study_usr_inst(lnrd_status_cd: int, lnrd_type_cd: int, lnrd_title: str , ifmm_seq: str, lnrd_run_time: int, db: Session):
+def study_usr_inst(lnrd_status_cd: int, lnrd_type_cd: int, lnrd_title: str , ifmm_seq: str, db: Session):
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     db_content = LangRecord(
         lnrdStatusCd=lnrd_status_cd,
         lnrdTypeCd=lnrd_type_cd,
         lnrdTitle=lnrd_title,
-        lnrdRunTime=lnrd_run_time,
+        lnrdRunTime=0,
         lnrdDelNy=0,
         regIp="1",
         regSeq=ifmm_seq,
@@ -80,7 +80,7 @@ def study_usr_inst(lnrd_status_cd: int, lnrd_type_cd: int, lnrd_title: str , ifm
 
     return db_content.lnrdSeq
 
-def study_usr_updt(lnrd_status_cd: int, lnrdSeq: str, ifmm_seq: str, db: Session):
+def study_usr_updt(lnrd_status_cd: int, lnrdSeq: str, ifmm_seq: str, lnrd_run_time:int, db: Session):
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     record = db.query(LangRecord).filter(LangRecord.lnrdSeq == lnrdSeq).first()
@@ -88,6 +88,7 @@ def study_usr_updt(lnrd_status_cd: int, lnrdSeq: str, ifmm_seq: str, db: Session
         raise ValueError(f"Record with id {lnrdSeq} not found")
 
     record.lnrdStatusCd = lnrd_status_cd
+    record.lnrdRunTime = lnrd_run_time
     record.modIp = "0"
     record.modSeq = ifmm_seq
     record.modDeviceCd = 0
@@ -149,12 +150,12 @@ def study_result_inst(contents: str, score: float, lnst_seq: str, lnsc_seq: str,
 
     return db_content.lnsrSeq
 
-def save_db_process(path: str, file: UploadFile, uuid: str, size: int, ifmm_seq: str, result_seperate: list, foreign_key: str, debug: bool):
+def save_db_process(path: str, file: UploadFile, uuid: str, size: int, ifmm_seq: str, result_seperate: list, foreign_key: str, lnrd_run_time:int, debug: bool):
     db_gen = get_db()
     db: Session = next(db_gen)
 
     try:
-        study_usr_updt(1002, foreign_key, ifmm_seq, db)
+        study_usr_updt(1002, foreign_key, ifmm_seq, lnrd_run_time, db)
         insert(path, file, uuid, size, foreign_key, 10, ifmm_seq, 1, db)
         for contents in result_seperate:
             script_usr_inst(contents[1], contents[2], contents[0], foreign_key, ifmm_seq, contents[3], db)
@@ -166,12 +167,12 @@ def save_db_process(path: str, file: UploadFile, uuid: str, size: int, ifmm_seq:
     finally:
         db.close()
 
-def insert_db_lnrd_recoding(lnrd_status_cd: int, lnrd_type_cd: int, lnrd_title: str , ifmm_seq: str, lnrd_run_time: int, debug: bool):
+def insert_db_lnrd_recoding(lnrd_status_cd: int, lnrd_type_cd: int, lnrd_title: str , ifmm_seq: str, debug: bool):
     db_gen = get_db()
     db: Session = next(db_gen)
 
     try:
-        foreign_key = study_usr_inst(lnrd_status_cd, lnrd_type_cd, lnrd_title, ifmm_seq, lnrd_run_time, db)
+        foreign_key = study_usr_inst(lnrd_status_cd, lnrd_type_cd, lnrd_title, ifmm_seq, db)
         db.commit()
         return foreign_key
     except Exception as e:
