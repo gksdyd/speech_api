@@ -141,14 +141,15 @@ async def separate_user(path: str, debug: bool = False):
     # 6) 오디오 로드 1회(메모리) + 안전 슬라이스
     base = AudioSegment.from_file(path, format="wav")
     result_seperate = []
+    speaker_cd_map = {}
+    next_cd = 1009
 
     for seg, label in zip(segments, labels):
-        lnsc_speaker_cd = int(label) + 1009
         padded = safe_slice(base, seg.start - 0.40, seg.end + 0.40)
 
         segment = preprocess_segment(padded)
 
-        filename = f"speaker{lnsc_speaker_cd}.wav"
+        filename = f"speaker.wav"
         segment.export(filename, format="wav")
 
         with torch.no_grad():
@@ -172,6 +173,13 @@ async def separate_user(path: str, debug: bool = False):
             if debug:
                 print("failed to trans text")
             continue
+
+        lab_key = int(label)
+        if lab_key not in speaker_cd_map:
+            speaker_cd_map[lab_key] = next_cd
+            next_cd += 1
+
+        lnsc_speaker_cd = speaker_cd_map[lab_key]
 
         result_seperate.append([lnsc_speaker_cd, lnsc_contents, lnsc_contents_eng, gender_cd])
 
