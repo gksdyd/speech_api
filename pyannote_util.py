@@ -142,9 +142,11 @@ async def separate_user(path: str, debug: bool = False):
     base = AudioSegment.from_file(path, format="wav")
     result_seperate = []
     speaker_cd_map = {}
+    gender_cd_map = {}
     next_cd = 1009
 
     for seg, label in zip(segments, labels):
+        lab_key = int(label)
         padded = safe_slice(base, seg.start - 0.40, seg.end + 0.40)
 
         segment = preprocess_segment(padded)
@@ -152,12 +154,15 @@ async def separate_user(path: str, debug: bool = False):
         filename = f"speaker.wav"
         segment.export(filename, format="wav")
 
-        with torch.no_grad():
-            gender = model.predict(filename, device=device)
-            if gender == "male":
-                gender_cd = 36
-            else:
-                gender_cd = 37
+        if lab_key not in speaker_cd_map:
+            with torch.no_grad():
+                gender = model.predict(filename, device=device)
+                if gender == "male":
+                    gender_cd = 36
+                else:
+                    gender_cd = 37
+        else:
+            gender_cd = gender_cd_map[lab_key]
 
         lnsc_contents = audio_extract(filename, "ko-KR", debug)
 
@@ -174,9 +179,9 @@ async def separate_user(path: str, debug: bool = False):
                 print("failed to trans text")
             continue
 
-        lab_key = int(label)
         if lab_key not in speaker_cd_map:
             speaker_cd_map[lab_key] = next_cd
+            gender_cd_map[lab_key] = gender_cd
             next_cd += 1
 
         lnsc_speaker_cd = speaker_cd_map[lab_key]
