@@ -204,12 +204,12 @@ def insert_db_lnrd_recoding(lnrd_status_cd: int, lnrd_type_cd: int, lnrd_title: 
     finally:
         db.close()
 
-def update_db_lnrd_recoding_for_empty_contents(ifmm_seq: str, foreign_key: str, debug: bool):
+def update_db_lnrd_recoding_for_empty_contents(ifmm_seq: str, foreign_key: str, lnrd_run_time:int, debug: bool):
     db_gen = get_db()
     db: Session = next(db_gen)
 
     try:
-        study_usr_updt(1003, foreign_key, ifmm_seq, db)
+        study_usr_updt(1003, foreign_key, ifmm_seq, lnrd_run_time, db)
         db.commit()
         return foreign_key
     except Exception as e:

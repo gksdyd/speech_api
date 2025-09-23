@@ -44,7 +44,7 @@ async def upload_audio(
 
     result_seperate = await separate_user(tmp_path, debug_mode)
     if result_seperate == -1:
-        update_db_lnrd_recoding_for_empty_contents(ifmm_seq, foreign_key, debug_mode)
+        update_db_lnrd_recoding_for_empty_contents(ifmm_seq, foreign_key, lnrd_run_time, debug_mode)
         if debug_mode:
             print("No Contents")
         os.remove(tmp_path)
