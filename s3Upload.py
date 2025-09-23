@@ -17,8 +17,8 @@ client_s3 = boto3.client(
 REGION_NAME = region_name=os.getenv("AWS_REGION")
 BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 
-async def upload_wav_to_s3(file: UploadFile, file_bytes: bytes, uuid: str, debug) -> str | None:
-    key = f"Record/10/{datetime.now():%Y/%m/%d}/{uuid}"
+async def upload_wav_to_s3(file: UploadFile, file_bytes: bytes, uuid: str, path_name: str, debug) -> str | None:
+    key = f"{path_name}/10/{datetime.now():%Y/%m/%d}/{uuid}"
 
     try:
         # S3에 업로드

@@ -35,7 +35,7 @@ async def upload_audio(
 
     # S3 업로드
     uuid = str(uuid4()) + "." + file.filename.split(".")[-1]
-    file_url = await upload_wav_to_s3(file, audio_bytes, uuid, debug_mode)
+    file_url = await upload_wav_to_s3(file, audio_bytes, uuid, "Record", debug_mode)
     if file_url is None:
         if debug_mode:
             print("S3 업로드 실패")
@@ -79,7 +79,7 @@ async def pronunciation_evaluation(
         size = output_file_size(tmp_path, debug_mode)
         # S3 업로드
         uuid = str(uuid4()) + "." + file.filename.split(".")[-1]
-        file_url = await upload_wav_to_s3(file, audio_bytes, uuid, debug_mode)
+        file_url = await upload_wav_to_s3(file, audio_bytes, uuid, "StudyResult", debug_mode)
         if file_url is None:
             if debug_mode:
                 print("S3 업로드 실패")

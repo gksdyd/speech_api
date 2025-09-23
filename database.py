@@ -31,10 +31,32 @@ def get_db():
     finally:
         db.close()
 
-def insert(path: str, file: UploadFile, uuid: str, size: int, lnrd_seq:str, type: int, ifmm_seq: str, sort: int, db: Session):
+def recordInsert(path: str, file: UploadFile, uuid: str, size: int, lnrd_seq:str, type: int, ifmm_seq: str, sort: int, db: Session):
     date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     db_content = LangRecodeUploaded(
+        path=path,
+        originalName=file.filename,
+        uuidName=uuid,
+        ext=uuid.split(".")[-1],
+        size=size,
+        pseq=lnrd_seq,
+        sort=sort,
+        type=type,
+        delNy=0,
+        regIp="1",
+        regSeq=ifmm_seq,
+        regDeviceCd=0,
+        regDateTime=date,
+        regDateTimeSvr=date,
+    )
+
+    db.add(db_content)
+
+def studyResultInsert(path: str, file: UploadFile, uuid: str, size: int, lnrd_seq:str, type: int, ifmm_seq: str, sort: int, db: Session):
+    date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    db_content = LangStudyResultUploaded(
         path=path,
         originalName=file.filename,
         uuidName=uuid,
@@ -156,7 +178,7 @@ def save_db_process(path: str, file: UploadFile, uuid: str, size: int, ifmm_seq:
 
     try:
         study_usr_updt(1002, foreign_key, ifmm_seq, lnrd_run_time, db)
-        insert(path, file, uuid, size, foreign_key, 10, ifmm_seq, 1, db)
+        recordInsert(path, file, uuid, size, foreign_key, 10, ifmm_seq, 1, db)
         for contents in result_seperate:
             script_usr_inst(contents[1], contents[2], contents[0], foreign_key, ifmm_seq, contents[3], db)
         db.commit()
@@ -205,7 +227,7 @@ def insert_db_study_result(path: str, file: UploadFile, uuid: str, size: int, co
         foreign_key = study_result_inst(contents, score, lnst_seq, lnsc_seq, ifmm_seq, db)
 
         if path is not None:
-            insert(path, file, uuid, size, foreign_key, 20, ifmm_seq, sort, db)
+            studyResultInsert(path, file, uuid, size, foreign_key, 20, ifmm_seq, sort, db)
         db.commit()
     except Exception as e:
         db.rollback()
